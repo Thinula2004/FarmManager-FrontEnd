@@ -1,8 +1,8 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { NavigationContainer } from "@react-navigation/native";
-import HomeScreen from "../screens/HomeScreen";
-import SettingsScreen from "../screens/SettingsScreen";
+import OwnerHomeScreen from "../screens/OwnerHomeScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 import LoginScreen from "../screens/LoginScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
@@ -12,7 +12,7 @@ import FarmPage from "../screens/FarmPage";
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
-  Settings: undefined;
+  Profile: undefined;
   Farm: { farm: Farm };
 };
 
@@ -32,7 +32,7 @@ export default function Navigator() {
           },
           headerRight: () => (
             <TouchableOpacity
-              onPress={() => navigation.navigate("Settings")}
+              onPress={() => navigation.navigate("Profile")}
               style={{
                 backgroundColor: "transparent",
                 paddingLeft: 5,
@@ -50,7 +50,7 @@ export default function Navigator() {
         />
         <Stack.Screen
           name="Home"
-          component={HomeScreen}
+          component={OwnerHomeScreen}
           options={{ title: "Dashboard", headerShown: false }}
         />
         <Stack.Screen
@@ -59,9 +59,9 @@ export default function Navigator() {
           options={{ title: "Farm Details", headerShown: false }}
         />
         <Stack.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{ title: "Profile" }}
+          name="Profile"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

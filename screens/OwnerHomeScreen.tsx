@@ -111,7 +111,7 @@ const WHITE = "#FFFFFF";
 
 // ─────────────────────────────────────────────────────────
 
-export default function HomeScreen() {
+export default function OwnerHomeScreen() {
   const [showFarmModal, setShowFarmModal] = useState(false);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -160,7 +160,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.avatarBtn}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate("Settings")}
+            onPress={() => navigation.navigate("Profile")}
           >
             <Text style={styles.avatarText}>{initials}</Text>
             {/* Online indicator dot */}
