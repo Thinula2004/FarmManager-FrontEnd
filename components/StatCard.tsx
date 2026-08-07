@@ -1,16 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
 
-const G900 = "#14532D"; // darkest green – primary text accents
-const G700 = "#15803D"; // main brand green
-const G500 = "#22C55E"; // bright accent
-const G100 = "#DCFCE7"; // light tint panels
-const G50 = "#F0FDF4"; // page background
-
-const SLATE = "#1E293B"; // primary text
-const MUTED = "#64748B"; // secondary text
-const BORDER = "#E2E8F0";
-const WHITE = "#FFFFFF";
-
 export default function StatCard({
   label,
   value,

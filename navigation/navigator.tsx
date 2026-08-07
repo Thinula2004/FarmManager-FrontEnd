@@ -8,6 +8,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import Farm from "../models/Farm";
 import FarmPage from "../screens/FarmPage";
+import OfficerHomeScreen from "../screens/OfficerHomeScreen";
+import HomeScreen from "../screens/HomeScreen";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -50,8 +52,8 @@ export default function Navigator() {
         />
         <Stack.Screen
           name="Home"
-          component={OwnerHomeScreen}
-          options={{ title: "Dashboard", headerShown: false }}
+          component={HomeScreen}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Farm"

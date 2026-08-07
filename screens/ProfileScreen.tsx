@@ -16,30 +16,7 @@ import { RootStackParamList } from "../navigation/navigator";
 import { logout, getUser } from "../services/AuthService";
 import User from "../models/User";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// ── Palette ────────────────────────────────────────────────
-const G950 = "#052e16";
-const G900 = "#14532D";
-const G700 = "#15803D";
-const G600 = "#16a34a";
-const G500 = "#22C55E";
-const G200 = "#bbf7d0";
-const G100 = "#DCFCE7";
-const G50 = "#F0FDF4";
-
-const SLATE900 = "#0f172a";
-const SLATE700 = "#1E293B";
-const SLATE500 = "#64748B";
-const SLATE200 = "#e2e8f0";
-const SLATE100 = "#f1f5f9";
-
-const RED600 = "#dc2626";
-const RED100 = "#fee2e2";
-const RED200 = "#fecaca";
-
-const WHITE = "#FFFFFF";
-
-// ──────────────────────────────────────────────────────────
+import Colors from "../services/ColorPalette";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -93,40 +70,23 @@ export default function ProfileScreen() {
 
   const menuSections: { label: string; items: MenuItem[] }[] = [
     {
-      label: "Farm Management",
-      items: [
-        {
-          icon: "storefront-outline",
-          iconBg: G50,
-          title: "My Farms",
-          subtitle: "View and manage your farms",
-        },
-        {
-          icon: "bar-chart-outline",
-          iconBg: G50,
-          title: "Activity Log",
-          subtitle: "Recent visits and changes",
-        },
-      ],
-    },
-    {
       label: "Preferences",
       items: [
         {
           icon: "notifications-outline",
-          iconBg: SLATE100,
+          iconBg: Colors.SLATE100,
           title: "Notifications",
           subtitle: "Manage alerts and reminders",
         },
         {
           icon: "lock-closed-outline",
-          iconBg: SLATE100,
+          iconBg: Colors.SLATE100,
           title: "Change Password",
           subtitle: "Update your credentials",
         },
         {
           icon: "help-circle-outline",
-          iconBg: SLATE100,
+          iconBg: Colors.SLATE100,
           title: "Help & Support",
           subtitle: "FAQs and contact",
         },
@@ -134,9 +94,29 @@ export default function ProfileScreen() {
     },
   ];
 
+  if (user?.role == "owner") {
+    menuSections.splice(0, 0, {
+      label: "Farm Management",
+      items: [
+        {
+          icon: "storefront-outline",
+          iconBg: Colors.G50,
+          title: "My Farms",
+          subtitle: "View and manage your farms",
+        },
+        {
+          icon: "bar-chart-outline",
+          iconBg: Colors.G50,
+          title: "Activity Log",
+          subtitle: "Recent visits and changes",
+        },
+      ],
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["left", "right", "bottom"]}>
-      <StatusBar barStyle="light-content" backgroundColor={G700} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.G700} />
 
       <ScrollView
         style={styles.scroll}
@@ -154,7 +134,7 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.backChevron}>
-              <Ionicons name="chevron-back" size={18} color={WHITE} />
+              <Ionicons name="chevron-back" size={18} color={Colors.WHITE} />
             </View>
             <Text style={styles.backLabel}>Profile</Text>
           </TouchableOpacity>
@@ -185,19 +165,19 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <InfoRow
               icon="person-outline"
-              iconBg={G50}
+              iconBg={Colors.G50}
               label="Full name"
               value={user?.name ?? "—"}
             />
             <InfoRow
               icon="call-outline"
-              iconBg={G50}
+              iconBg={Colors.G50}
               label="Phone number"
               value={user?.phone ?? "—"}
             />
             <InfoRow
               icon="shield-checkmark-outline"
-              iconBg={G50}
+              iconBg={Colors.G50}
               label="Role"
               value={roleLabel}
               last
@@ -229,7 +209,7 @@ export default function ProfileScreen() {
             activeOpacity={0.75}
           >
             <View style={styles.logoutIconWrap}>
-              <Ionicons name="log-out-outline" size={25} color={WHITE} />
+              <Ionicons name="log-out-outline" size={25} color={Colors.WHITE} />
             </View>
             <Text style={styles.logoutText}>Log out</Text>
           </TouchableOpacity>
@@ -258,7 +238,7 @@ function InfoRow({
   return (
     <View style={[styles.infoRow, !last && styles.rowBorder]}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={18} color={G700} />
+        <Ionicons name={icon} size={18} color={Colors.G700} />
       </View>
       <View style={styles.rowContent}>
         <Text style={styles.rowLabel}>{label}</Text>
@@ -283,13 +263,13 @@ function MenuRow({
       activeOpacity={0.6}
     >
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={18} color={SLATE700} />
+        <Ionicons name={icon} size={18} color={Colors.SLATE700} />
       </View>
       <View style={styles.rowContent}>
         <Text style={styles.menuTitle}>{title}</Text>
         <Text style={styles.menuSub}>{subtitle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={16} color={SLATE500} />
+      <Ionicons name="chevron-forward" size={16} color={Colors.SLATE500} />
     </TouchableOpacity>
   );
 }
@@ -297,14 +277,14 @@ function MenuRow({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: G50,
+    backgroundColor: Colors.G50,
   },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
 
   // ── Hero ──────────────────────────────────────────────
   hero: {
-    backgroundColor: G700,
+    backgroundColor: Colors.G700,
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 48,
@@ -367,20 +347,20 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: WHITE,
+    backgroundColor: Colors.WHITE,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: {
     fontSize: 28,
     fontWeight: "800",
-    color: G700,
+    color: Colors.G700,
     letterSpacing: -1,
   },
   heroName: {
     fontSize: 22,
     fontWeight: "800",
-    color: WHITE,
+    color: Colors.WHITE,
     letterSpacing: -0.5,
     marginBottom: 10,
   },
@@ -397,7 +377,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: G500,
+    backgroundColor: Colors.G500,
   },
   roleText: {
     fontSize: 13,
@@ -408,7 +388,7 @@ const styles = StyleSheet.create({
 
   // ── Body ──────────────────────────────────────────────
   body: {
-    backgroundColor: G50,
+    backgroundColor: Colors.G50,
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     marginTop: -24,
@@ -425,22 +405,22 @@ const styles = StyleSheet.create({
   sectionLabelText: {
     fontSize: 11,
     fontWeight: "700",
-    color: G700,
+    color: Colors.G700,
     textTransform: "uppercase",
     letterSpacing: 1.2,
   },
 
   // ── Card ──────────────────────────────────────────────
   card: {
-    backgroundColor: WHITE,
+    backgroundColor: Colors.WHITE,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: SLATE200,
+    borderColor: Colors.SLATE200,
     overflow: "hidden",
     marginBottom: 20,
     ...Platform.select({
       ios: {
-        shadowColor: SLATE900,
+        shadowColor: Colors.SLATE900,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.07,
         shadowRadius: 8,
@@ -452,7 +432,7 @@ const styles = StyleSheet.create({
   // ── Shared row ────────────────────────────────────────
   rowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: SLATE100,
+    borderBottomColor: Colors.SLATE100,
   },
   rowIcon: {
     width: 38,
@@ -478,12 +458,12 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: SLATE500,
+    color: Colors.SLATE500,
   },
   rowValue: {
     fontSize: 14,
     fontWeight: "700",
-    color: SLATE900,
+    color: Colors.SLATE900,
     letterSpacing: -0.1,
   },
 
@@ -498,13 +478,13 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: SLATE900,
+    color: Colors.SLATE900,
     marginBottom: 1,
   },
   menuSub: {
     fontSize: 11,
     fontWeight: "500",
-    color: SLATE500,
+    color: Colors.SLATE500,
   },
 
   logoutBtn: {
@@ -513,7 +493,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     width: "50%",
-    backgroundColor: RED600,
+    backgroundColor: Colors.RED600,
     borderRadius: 16,
     paddingVertical: 10,
     marginTop: 10,
@@ -521,7 +501,7 @@ const styles = StyleSheet.create({
     marginHorizontal: "auto",
     ...Platform.select({
       ios: {
-        shadowColor: RED600,
+        shadowColor: Colors.RED600,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 6,
@@ -538,14 +518,14 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 15,
     fontWeight: "800",
-    color: WHITE,
+    color: Colors.WHITE,
     letterSpacing: -0.2,
   },
 
   version: {
     textAlign: "center",
     fontSize: 12,
-    color: SLATE500,
+    color: Colors.SLATE500,
     fontWeight: "500",
     marginBottom: 8,
   },

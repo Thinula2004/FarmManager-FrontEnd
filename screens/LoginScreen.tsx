@@ -13,9 +13,10 @@ import {
 import { loginUser } from "../routes/userRoutes";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
-import { getToken } from "../services/AuthService";
+import { getToken, getUser } from "../services/AuthService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/navigator";
+import User from "../models/User";
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");

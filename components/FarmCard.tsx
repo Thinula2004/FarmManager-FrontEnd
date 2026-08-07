@@ -5,17 +5,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/navigator";
 import { useNavigation } from "@react-navigation/native";
 import HealthBadge from "./HealthBadge";
-
-const G900 = "#14532D"; // darkest green – primary text accents
-const G700 = "#15803D"; // main brand green
-const G500 = "#22C55E"; // bright accent
-const G100 = "#DCFCE7"; // light tint panels
-const G50 = "#F0FDF4"; // page background
-
-const SLATE = "#1E293B"; // primary text
-const MUTED = "#64748B"; // secondary text
-const BORDER = "#E2E8F0";
-const WHITE = "#FFFFFF";
+import Colors from "../services/ColorPalette";
 
 export default function FarmCard({ farm }: { farm: Farm }) {
   const highMortality = farm.mortalityRate > 10;
@@ -35,7 +25,7 @@ export default function FarmCard({ farm }: { farm: Farm }) {
       {/* Header */}
       <View style={cardStyles.header}>
         <View style={cardStyles.iconWrap}>
-          <Ionicons name="storefront" size={25} color={G900} />
+          <Ionicons name="storefront" size={25} color={Colors.G900} />
         </View>
 
         <View style={{ flex: 1 }}>
@@ -99,11 +89,11 @@ export default function FarmCard({ farm }: { farm: Farm }) {
 
 const cardStyles = StyleSheet.create({
   card: {
-    backgroundColor: WHITE,
+    backgroundColor: Colors.WHITE,
     borderRadius: 20,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: Colors.SLATE200,
     overflow: "hidden",
     elevation: 3,
     shadowColor: "#000",
@@ -123,7 +113,7 @@ const cardStyles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: G100,
+    backgroundColor: Colors.G100,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -132,21 +122,21 @@ const cardStyles = StyleSheet.create({
   farmName: {
     fontSize: 16,
     fontWeight: "700",
-    color: SLATE,
+    color: Colors.SLATE700,
     marginBottom: 2,
   },
   location: {
     fontSize: 12,
-    color: MUTED,
+    color: Colors.SLATE500,
     fontWeight: "500",
   },
 
   statsRow: {
     flexDirection: "row",
-    backgroundColor: G50,
+    backgroundColor: Colors.G50,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: G100,
+    borderColor: Colors.G100,
     paddingVertical: 14,
     paddingHorizontal: 8,
   },
@@ -156,12 +146,12 @@ const cardStyles = StyleSheet.create({
   statValue: {
     fontSize: 15,
     fontWeight: "800",
-    color: SLATE,
+    color: Colors.SLATE700,
     marginBottom: 3,
   },
   statLabel: {
     fontSize: 10,
-    color: MUTED,
+    color: Colors.SLATE500,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     fontWeight: "600",
@@ -169,7 +159,7 @@ const cardStyles = StyleSheet.create({
 
   statDivider: {
     width: 1,
-    backgroundColor: G100,
+    backgroundColor: Colors.G100,
     marginVertical: 2,
   },
 
@@ -182,18 +172,18 @@ const cardStyles = StyleSheet.create({
   },
   lastVisit: {
     fontSize: 12,
-    color: MUTED,
+    color: Colors.SLATE500,
     fontWeight: "500",
   },
   detailsBtn: {
-    backgroundColor: G100,
+    backgroundColor: Colors.G100,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
   },
   detailsBtnText: {
     fontSize: 12,
-    color: G700,
+    color: Colors.G700,
     fontWeight: "700",
   },
 });

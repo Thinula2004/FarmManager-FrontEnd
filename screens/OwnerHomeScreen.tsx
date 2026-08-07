@@ -19,6 +19,7 @@ import FarmCard from "../components/FarmCard";
 import StatCard from "../components/StatCard";
 import AddFarmModal from "../components/AddFarmModel";
 import { Ionicons } from "@expo/vector-icons";
+import Colors from "../services/ColorPalette";
 
 const FARMS = [
   new Farm(
@@ -83,32 +84,6 @@ const SUMMARY = {
   avgWeight: 379,
 };
 
-// ── Palette ──────────────────────────────────────────────
-const G950 = "#052e16"; // ultra-dark green for text on light green
-const G900 = "#14532D";
-const G700 = "#15803D"; // brand green
-const G600 = "#16a34a";
-const G500 = "#22C55E";
-const G200 = "#bbf7d0";
-const G100 = "#DCFCE7";
-const G50 = "#F0FDF4"; // page background
-
-const SLATE900 = "#0f172a"; // primary headings
-const SLATE700 = "#1E293B"; // primary text
-const SLATE500 = "#64748B"; // secondary/muted text
-const SLATE200 = "#e2e8f0"; // dividers / borders
-const SLATE100 = "#f1f5f9"; // subtle surface
-
-const RED500 = "#ef4444";
-const RED100 = "#fee2e2";
-const RED800 = "#991b1b";
-
-const AMBER500 = "#f59e0b";
-const AMBER100 = "#fef3c7";
-const AMBER800 = "#92400e";
-
-const WHITE = "#FFFFFF";
-
 // ─────────────────────────────────────────────────────────
 
 export default function OwnerHomeScreen() {
@@ -142,7 +117,7 @@ export default function OwnerHomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={G50} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.G50} />
 
       <ScrollView
         style={styles.scroll}
@@ -154,7 +129,7 @@ export default function OwnerHomeScreen() {
           <View style={styles.headerLeft}>
             <Text style={styles.dateLabel}>{today}</Text>
             <Text style={styles.headerTitle}>{user?.name ?? "Loading..."}</Text>
-            <Text style={styles.headerSubtitle}>Farm Overview</Text>
+            <Text style={styles.headerSubtitle}>Farm Owner</Text>
           </View>
 
           <TouchableOpacity
@@ -168,7 +143,6 @@ export default function OwnerHomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ── Hero Banner ── */}
         <View style={styles.heroBanner}>
           <View style={styles.heroRingOuter} />
           <View style={styles.heroRingInner} />
@@ -221,7 +195,7 @@ export default function OwnerHomeScreen() {
             activeOpacity={0.8}
             onPress={() => setShowFarmModal(true)}
           >
-            <Ionicons name="add" size={22} color={WHITE} />
+            <Ionicons name="add" size={22} color={Colors.WHITE} />
           </TouchableOpacity>
         </View>
 
@@ -244,7 +218,7 @@ export default function OwnerHomeScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: G50,
+    backgroundColor: Colors.G50,
   },
   scroll: { flex: 1 },
   scrollContent: {
@@ -266,7 +240,7 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: G600,
+    color: Colors.G600,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: 4,
@@ -274,13 +248,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: SLATE900,
+    color: Colors.SLATE900,
     letterSpacing: -0.5,
     lineHeight: 32,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: SLATE500,
+    color: Colors.SLATE500,
     fontWeight: "500",
     marginTop: 2,
   },
@@ -288,16 +262,16 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: G700,
+    backgroundColor: Colors.G700,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 4,
     // Green glow ring
     borderWidth: 3,
-    borderColor: G200,
+    borderColor: Colors.G200,
     ...Platform.select({
       ios: {
-        shadowColor: G900,
+        shadowColor: Colors.G900,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -306,7 +280,7 @@ const styles = StyleSheet.create({
     }),
   },
   avatarText: {
-    color: WHITE,
+    color: Colors.WHITE,
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: 0.5,
@@ -318,14 +292,14 @@ const styles = StyleSheet.create({
     width: 11,
     height: 11,
     borderRadius: 6,
-    backgroundColor: G500,
+    backgroundColor: Colors.G500,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: Colors.WHITE,
   },
 
   // ── Hero Banner ──────────────────────────────────────────
   heroBanner: {
-    backgroundColor: G700,
+    backgroundColor: Colors.G700,
     borderRadius: 24,
     padding: 24,
     marginBottom: 20,
@@ -333,7 +307,7 @@ const styles = StyleSheet.create({
     minHeight: 160,
     ...Platform.select({
       ios: {
-        shadowColor: G900,
+        shadowColor: Colors.G900,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
         shadowRadius: 16,
@@ -381,7 +355,7 @@ const styles = StyleSheet.create({
   heroNumber: {
     fontSize: 48,
     fontWeight: "900",
-    color: WHITE,
+    color: Colors.WHITE,
     letterSpacing: -2,
     lineHeight: 52,
     marginBottom: 12,
@@ -400,7 +374,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: G500,
+    backgroundColor: Colors.G500,
   },
   heroBadgeText: {
     fontSize: 12,
@@ -418,7 +392,7 @@ const styles = StyleSheet.create({
   miniStatValue: {
     fontSize: 20,
     fontWeight: "800",
-    color: WHITE,
+    color: Colors.WHITE,
     letterSpacing: -0.5,
   },
   miniStatLabel: {
@@ -454,32 +428,32 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: SLATE900,
+    color: Colors.SLATE900,
     letterSpacing: -0.3,
   },
   countPill: {
-    backgroundColor: G100,
+    backgroundColor: Colors.G100,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: G200,
+    borderColor: Colors.G200,
   },
   countText: {
     fontSize: 12,
     fontWeight: "700",
-    color: G700,
+    color: Colors.G700,
   },
   addBtn: {
     width: 30,
     height: 30,
     borderRadius: 12,
-    backgroundColor: G700,
+    backgroundColor: Colors.G700,
     justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: G900,
+        shadowColor: Colors.G900,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.25,
         shadowRadius: 6,

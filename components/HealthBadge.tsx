@@ -1,8 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-
-const G900 = "#14532D";
-const G500 = "#22C55E";
-const G100 = "#DCFCE7";
+import Colors from "../services/ColorPalette";
 
 export default function HealthBadge({
   status,
@@ -10,7 +7,7 @@ export default function HealthBadge({
   status: "Good" | "Fair" | "Poor";
 }) {
   const map = {
-    Good: { bg: G100, text: G900, dot: G500 },
+    Good: { bg: Colors.G100, text: Colors.G900, dot: Colors.G500 },
     Fair: { bg: "#FEF9C3", text: "#92400E", dot: "#EAB308" },
     Poor: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
   };

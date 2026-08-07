@@ -13,6 +13,10 @@ import { RootStackParamList } from "../navigation/navigator";
 import { Ionicons } from "@expo/vector-icons";
 import HealthBadge from "../components/HealthBadge";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Colors from "../services/ColorPalette";
+import { useEffect, useState } from "react";
+import User from "../models/User";
+import { getUser } from "../services/AuthService";
 
 // ── Dummy field visits ────────────────────────────────────
 const DUMMY_VISITS = [
@@ -56,36 +60,6 @@ const DUMMY_VISITS = [
     officer: "Nimal Silva",
   },
 ];
-
-// ── Palette ───────────────────────────────────────────────
-const G950 = "#052e16";
-const G900 = "#14532D";
-const G700 = "#15803D";
-const G600 = "#16a34a";
-const G500 = "#22C55E";
-const G400 = "#4ade80";
-const G200 = "#bbf7d0";
-const G100 = "#DCFCE7";
-const G50 = "#F0FDF4";
-
-const SLATE900 = "#0f172a";
-const SLATE700 = "#1E293B";
-const SLATE500 = "#64748B";
-const SLATE300 = "#cbd5e1";
-const SLATE200 = "#e2e8f0";
-const SLATE100 = "#f1f5f9";
-
-const RED600 = "#dc2626";
-const RED100 = "#fee2e2";
-const RED50 = "#fef2f2";
-
-const AMBER600 = "#d97706";
-const AMBER100 = "#fef3c7";
-const AMBER50 = "#fffbeb";
-
-const WHITE = "#FFFFFF";
-
-// ─────────────────────────────────────────────────────────
 
 // ── Vitals bar item ───────────────────────────────────────
 function VitalItem({
@@ -134,7 +108,7 @@ const vital = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: "600",
-    color: SLATE500,
+    color: Colors.SLATE500,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     textAlign: "center",
@@ -154,7 +128,7 @@ function InfoChip({
   return (
     <View style={chip.wrap}>
       <View style={chip.iconWrap}>
-        <Ionicons name={icon} size={16} color={G700} />
+        <Ionicons name={icon} size={16} color={Colors.G700} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={chip.label}>{label}</Text>
@@ -170,10 +144,10 @@ const chip = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
-    backgroundColor: WHITE,
+    backgroundColor: Colors.WHITE,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: SLATE200,
+    borderColor: Colors.SLATE200,
     padding: 12,
     flex: 1,
   },
@@ -181,16 +155,16 @@ const chip = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 8,
-    backgroundColor: G50,
+    backgroundColor: Colors.G50,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: G100,
+    borderColor: Colors.G100,
   },
   label: {
     fontSize: 10,
     fontWeight: "600",
-    color: SLATE500,
+    color: Colors.SLATE500,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -198,7 +172,7 @@ const chip = StyleSheet.create({
   value: {
     fontSize: 13,
     fontWeight: "700",
-    color: SLATE700,
+    color: Colors.SLATE700,
     lineHeight: 17,
   },
 });
@@ -234,7 +208,7 @@ function VisitCard({
               <Ionicons
                 name="person-circle-outline"
                 size={13}
-                color={SLATE500}
+                color={Colors.SLATE500}
               />
               <Text style={lv.officer}>{visit.officer}</Text>
             </View>
@@ -250,7 +224,9 @@ function VisitCard({
           </View>
           <View style={lv.metricDivider} />
           <View style={lv.metricCell}>
-            <Text style={[lv.metricVal, mortalityHigh && { color: RED600 }]}>
+            <Text
+              style={[lv.metricVal, mortalityHigh && { color: Colors.RED600 }]}
+            >
               {visit.mortalityToday}
             </Text>
             <Text style={lv.metricLbl}>Mortality</Text>
@@ -270,7 +246,7 @@ function VisitCard({
         {/* Feed type tag + notes */}
         <View style={lv.footer}>
           <View style={lv.feedTag}>
-            <Ionicons name="leaf-outline" size={11} color={G700} />
+            <Ionicons name="leaf-outline" size={11} color={Colors.G700} />
             <Text style={lv.feedTagText}>{visit.feedType}</Text>
           </View>
           {visit.notes ? (
@@ -299,25 +275,25 @@ const lv = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: G700,
+    backgroundColor: Colors.G700,
     borderWidth: 2,
-    borderColor: G200,
+    borderColor: Colors.G200,
     zIndex: 1,
   },
   line: {
     flex: 1,
     width: 2,
-    backgroundColor: G200,
+    backgroundColor: Colors.G200,
     marginTop: 4,
     marginBottom: -4,
   },
   // Card
   card: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: Colors.WHITE,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: SLATE200,
+    borderColor: Colors.SLATE200,
     marginBottom: 14,
     overflow: "hidden",
     ...Platform.select({
@@ -341,7 +317,7 @@ const lv = StyleSheet.create({
   date: {
     fontSize: 14,
     fontWeight: "800",
-    color: SLATE900,
+    color: Colors.SLATE900,
     marginBottom: 3,
     letterSpacing: -0.2,
   },
@@ -352,33 +328,33 @@ const lv = StyleSheet.create({
   },
   officer: {
     fontSize: 11,
-    color: SLATE500,
+    color: Colors.SLATE500,
     fontWeight: "500",
   },
   // Metrics strip
   grid: {
     flexDirection: "row",
-    backgroundColor: G50,
+    backgroundColor: Colors.G50,
     borderTopWidth: 1,
-    borderColor: G100,
+    borderColor: Colors.G100,
     paddingVertical: 11,
   },
   metricCell: { flex: 1, alignItems: "center" },
   metricVal: {
     fontSize: 14,
     fontWeight: "800",
-    color: SLATE900,
+    color: Colors.SLATE900,
     marginBottom: 2,
     letterSpacing: -0.3,
   },
   metricLbl: {
     fontSize: 9,
-    color: SLATE500,
+    color: Colors.SLATE500,
     textTransform: "uppercase",
     letterSpacing: 0.4,
     fontWeight: "600",
   },
-  metricDivider: { width: 1, backgroundColor: G200 },
+  metricDivider: { width: 1, backgroundColor: Colors.G200 },
   // Footer
   footer: {
     flexDirection: "row",
@@ -387,28 +363,28 @@ const lv = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderTopWidth: 1,
-    borderColor: SLATE200,
+    borderColor: Colors.SLATE200,
   },
   feedTag: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: G100,
+    backgroundColor: Colors.G100,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: G200,
+    borderColor: Colors.G200,
   },
   feedTagText: {
     fontSize: 11,
     fontWeight: "700",
-    color: G900,
+    color: Colors.G900,
   },
   notes: {
     flex: 1,
     fontSize: 11,
-    color: SLATE500,
+    color: Colors.SLATE500,
     fontStyle: "italic",
   },
 });
@@ -436,21 +412,21 @@ const sh = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "800",
-    color: SLATE900,
+    color: Colors.SLATE900,
     letterSpacing: -0.3,
   },
   pill: {
-    backgroundColor: G100,
+    backgroundColor: Colors.G100,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: G200,
+    borderColor: Colors.G200,
   },
   pillText: {
     fontSize: 11,
     fontWeight: "700",
-    color: G700,
+    color: Colors.G700,
   },
 });
 
@@ -459,98 +435,104 @@ type Props = NativeStackScreenProps<RootStackParamList, "Farm">;
 export default function FarmPage({ route }: Props) {
   const { farm } = route.params;
   const navigation = useNavigation();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    getUser().then(setUser);
+  }, []);
 
   return (
-    <SafeAreaView style={s.safe} edges={["left", "right", "bottom"]}>
-      <StatusBar barStyle="light-content" backgroundColor={G950} />
+    <SafeAreaView style={styles.safe} edges={["left", "right", "bottom"]}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.G950} />
 
       {/* ── Hero header ── */}
-      <View style={s.hero}>
+      <View style={styles.hero}>
         {/* Decorative rings */}
-        <View style={s.ringA} />
-        <View style={s.ringB} />
+        <View style={styles.ringA} />
+        <View style={styles.ringB} />
 
         {/* Nav row */}
-        <View style={s.heroNav}>
+        <View style={styles.heroNav}>
           <TouchableOpacity
-            style={s.backBtn}
+            style={styles.backBtn}
             onPress={() => navigation.goBack()}
             activeOpacity={0.8}
           >
-            <Ionicons name="arrow-back" size={20} color={WHITE} />
+            <Ionicons name="arrow-back" size={20} color={Colors.WHITE} />
           </TouchableOpacity>
-
-          <TouchableOpacity style={s.editBtn} activeOpacity={0.8}>
-            <Ionicons name="pencil" size={13} color={WHITE} />
-            <Text style={s.editBtnText}>Edit</Text>
-          </TouchableOpacity>
+          {user?.role == "owner" && (
+            <TouchableOpacity style={styles.editBtn} activeOpacity={0.8}>
+              <Ionicons name="pencil" size={13} color={Colors.WHITE} />
+              <Text style={styles.editBtnText}>Edit</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Farm identity */}
-        <View style={s.heroBody}>
-          <View style={s.heroLeft}>
+        <View style={styles.heroBody}>
+          <View style={styles.heroLeft}>
             <View style={{ width: 100, alignItems: "baseline" }}>
               <HealthBadge status={farm.healthStatus} />
             </View>
-            <Text style={s.heroFarmName} numberOfLines={2}>
+            <Text style={styles.heroFarmName} numberOfLines={2}>
               {farm.name}
             </Text>
-            <View style={s.heroMeta}>
-              <Ionicons name="location" size={12} color={G400} />
-              <Text style={s.heroCity}>{farm.city}</Text>
-              <View style={s.heroDot} />
-              <Ionicons name="time-outline" size={12} color={G400} />
-              <Text style={s.heroCity}>{farm.lastVisit}</Text>
+            <View style={styles.heroMeta}>
+              <Ionicons name="location" size={12} color={Colors.G400} />
+              <Text style={styles.heroCity}>{farm.city}</Text>
+              <View style={styles.heroDot} />
+              <Ionicons name="time-outline" size={12} color={Colors.G400} />
+              <Text style={styles.heroCity}>{farm.lastVisit}</Text>
             </View>
           </View>
 
           {/* Batch day ring */}
-          <View style={s.batchBadge}>
-            <Text style={s.batchDay}>{farm.batchAge}</Text>
-            <Text style={s.batchDayLabel}>DAY</Text>
+          <View style={styles.batchBadge}>
+            <Text style={styles.batchDay}>{farm.batchAge}</Text>
+            <Text style={styles.batchDayLabel}>DAY</Text>
           </View>
         </View>
       </View>
 
       <ScrollView
-        style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Vitals strip ── */}
-        <View style={s.vitalsStrip}>
+        <View style={styles.vitalsStrip}>
           <VitalItem
             label="Live Chicks"
             value={farm.activeChicks.toLocaleString()}
-            color={G700}
-            bg={G50}
+            color={Colors.G700}
+            bg={Colors.G50}
           />
           <VitalItem
             label="Avg Weight"
             value={`${farm.avgWeight}`}
             unit="g"
-            color={G700}
-            bg={G50}
+            color={Colors.G700}
+            bg={Colors.G50}
           />
           <VitalItem
             label="Mortality"
             value={`${farm.mortalityRate}`}
             unit="%"
-            color={RED600}
-            bg={RED50}
+            color={Colors.RED600}
+            bg={Colors.RED50}
           />
           <VitalItem
             label="Feed"
             value={`${farm.feedConsumed}`}
             unit="kg"
-            color={AMBER600}
-            bg={AMBER50}
+            color={Colors.AMBER600}
+            bg={Colors.AMBER50}
           />
         </View>
 
         {/* ── Farm Details ── */}
         <SectionHeader title="Farm Details" />
-        <View style={s.chipGrid}>
+        <View style={styles.chipGrid}>
           <InfoChip icon="call-outline" label="Contact" value={farm.tel} />
           <InfoChip
             icon="person-outline"
@@ -558,7 +540,7 @@ export default function FarmPage({ route }: Props) {
             value={farm.assignedTo ? farm.assignedTo.name : "Unassigned"}
           />
         </View>
-        <View style={[s.chipGrid, { marginTop: 10 }]}>
+        <View style={[styles.chipGrid, { marginTop: 10 }]}>
           <InfoChip icon="location-outline" label="City" value={farm.city} />
           <InfoChip
             icon="calendar-outline"
@@ -566,7 +548,7 @@ export default function FarmPage({ route }: Props) {
             value={farm.lastVisit}
           />
         </View>
-        <View style={[s.chipGrid, { marginTop: 10 }]}>
+        <View style={[styles.chipGrid, { marginTop: 10 }]}>
           <InfoChip
             icon="navigate-outline"
             label="Address"
@@ -575,7 +557,7 @@ export default function FarmPage({ route }: Props) {
         </View>
 
         {/* ── Field Visits ── */}
-        <View style={s.visitsSectionHeader}>
+        <View style={styles.visitsSectionHeader}>
           <SectionHeader
             title="Field Visits"
             badge={`${DUMMY_VISITS.length} visits`}
@@ -586,7 +568,7 @@ export default function FarmPage({ route }: Props) {
           </TouchableOpacity> */}
         </View>
 
-        <View style={s.timelineWrap}>
+        <View style={styles.timelineWrap}>
           {DUMMY_VISITS.map((visit, index) => (
             <VisitCard
               key={visit.id}
@@ -599,12 +581,23 @@ export default function FarmPage({ route }: Props) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      {user?.role == "officer" && (
+        <TouchableOpacity style={styles.fab} onPress={() => {}}>
+          <Text style={styles.fabText}>Record a Visit</Text>
+          <Ionicons
+            style={{ marginBottom: 3 }}
+            name="create-outline"
+            size={23}
+            color="white"
+          />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: G50 },
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.G50 },
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 18,
@@ -614,14 +607,14 @@ const s = StyleSheet.create({
 
   // ── Hero ────────────────────────────────────────────────
   hero: {
-    backgroundColor: G900,
+    backgroundColor: Colors.G900,
     paddingHorizontal: 18,
     paddingTop: 52,
     paddingBottom: 24,
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: G950,
+        shadowColor: Colors.G950,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.35,
         shadowRadius: 14,
@@ -676,7 +669,7 @@ const s = StyleSheet.create({
   },
   editBtnText: {
     fontSize: 13,
-    color: WHITE,
+    color: Colors.WHITE,
     fontWeight: "700",
   },
 
@@ -693,7 +686,7 @@ const s = StyleSheet.create({
   heroFarmName: {
     fontSize: 26,
     fontWeight: "900",
-    color: WHITE,
+    color: Colors.WHITE,
     letterSpacing: -0.6,
     lineHeight: 30,
   },
@@ -704,14 +697,14 @@ const s = StyleSheet.create({
   },
   heroCity: {
     fontSize: 12,
-    color: G400,
+    color: Colors.G400,
     fontWeight: "500",
   },
   heroDot: {
     width: 3,
     height: 3,
     borderRadius: 2,
-    backgroundColor: G500,
+    backgroundColor: Colors.G500,
     opacity: 0.6,
     marginHorizontal: 2,
   },
@@ -723,7 +716,7 @@ const s = StyleSheet.create({
     borderRadius: 32,
     backgroundColor: "rgba(255,255,255,0.1)",
     borderWidth: 2,
-    borderColor: G500,
+    borderColor: Colors.G500,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 12,
@@ -731,14 +724,14 @@ const s = StyleSheet.create({
   batchDay: {
     fontSize: 22,
     fontWeight: "900",
-    color: WHITE,
+    color: Colors.WHITE,
     lineHeight: 24,
     letterSpacing: -1,
   },
   batchDayLabel: {
     fontSize: 9,
     fontWeight: "700",
-    color: G400,
+    color: Colors.G400,
     letterSpacing: 1.5,
     marginTop: 1,
   },
@@ -751,9 +744,9 @@ const s = StyleSheet.create({
     marginHorizontal: -18,
     paddingHorizontal: 10,
     paddingVertical: 16,
-    backgroundColor: WHITE,
+    backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
-    borderBottomColor: SLATE200,
+    borderBottomColor: Colors.SLATE200,
     marginBottom: 24,
   },
 
@@ -776,14 +769,14 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: G700,
+    backgroundColor: Colors.G700,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
     marginBottom: 14,
     ...Platform.select({
       ios: {
-        shadowColor: G900,
+        shadowColor: Colors.G900,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.2,
         shadowRadius: 6,
@@ -794,11 +787,40 @@ const s = StyleSheet.create({
   logVisitText: {
     fontSize: 13,
     fontWeight: "700",
-    color: WHITE,
+    color: Colors.WHITE,
   },
 
   // ── Timeline wrapper ──────────────────────────────────────
   timelineWrap: {
     paddingLeft: 4,
+  },
+
+  fab: {
+    flexDirection: "row",
+    gap: 20,
+    position: "absolute",
+    bottom: 30,
+    alignSelf: "center",
+    paddingHorizontal: 40,
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: Colors.G700,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.G700,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 6,
+      },
+      android: { elevation: 5 },
+    }),
+  },
+
+  fabText: {
+    color: Colors.WHITE,
+    fontWeight: "600",
+    fontSize: 18,
   },
 });
