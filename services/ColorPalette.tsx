@@ -12,6 +12,7 @@ const Colors = {
   SLATE900: "#0f172a",
   SLATE700: "#1E293B",
   SLATE500: "#64748B",
+  SLATE400: "#c3cad4",
   SLATE200: "#e2e8f0",
   SLATE100: "#f1f5f9",
 

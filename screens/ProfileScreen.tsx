@@ -12,11 +12,13 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { RootStackParamList } from "../navigation/navigator";
+import { navigateFromStack, RootStackParamList } from "../navigation/navigator";
 import { logout, getUser } from "../services/AuthService";
 import User from "../models/User";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../services/ColorPalette";
+import { getVersion } from "../services/Util";
+import ChangePasswordModal from "../components/ProfileScreen/ChangePasswordModal";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -32,6 +34,8 @@ type MenuItem = {
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [user, setUser] = useState<User | null>(null);
+  const [showingChangePasswordModal, setShowingChangePasswordModal] =
+    useState<boolean>(false);
 
   useEffect(() => {
     getUser().then(setUser);
@@ -77,18 +81,23 @@ export default function ProfileScreen() {
           iconBg: Colors.SLATE100,
           title: "Notifications",
           subtitle: "Manage alerts and reminders",
+          onPress: () => {},
         },
         {
           icon: "lock-closed-outline",
           iconBg: Colors.SLATE100,
           title: "Change Password",
-          subtitle: "Update your credentials",
+          subtitle: "Update your password",
+          onPress: () => {
+            setShowingChangePasswordModal(true);
+          },
         },
         {
           icon: "help-circle-outline",
           iconBg: Colors.SLATE100,
           title: "Help & Support",
           subtitle: "FAQs and contact",
+          onPress: () => {},
         },
       ],
     },
@@ -101,8 +110,20 @@ export default function ProfileScreen() {
         {
           icon: "storefront-outline",
           iconBg: Colors.G50,
-          title: "My Farms",
+          title: "Farms",
           subtitle: "View and manage your farms",
+          onPress: () => {
+            navigateFromStack("Farms");
+          },
+        },
+        {
+          icon: "person-add-outline",
+          iconBg: Colors.G50,
+          title: "Field Officers",
+          subtitle: "View and manage your officers",
+          onPress: () => {
+            navigateFromStack("Officers");
+          },
         },
         {
           icon: "bar-chart-outline",
@@ -215,9 +236,15 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           {/* App version */}
-          <Text style={styles.version}>FarmManager V1.0</Text>
+          <Text style={styles.version}>FarmManager {getVersion()}</Text>
         </View>
       </ScrollView>
+      <ChangePasswordModal
+        visible={showingChangePasswordModal}
+        onClose={() => {
+          setShowingChangePasswordModal(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

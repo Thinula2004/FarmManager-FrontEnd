@@ -12,56 +12,88 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/navigator";
-import { getUser } from "../services/AuthService";
+import { getUser, logout } from "../services/AuthService";
 import User from "../models/User";
 import Farm from "../models/Farm";
-import FarmCard from "../components/FarmCard";
+import FarmCard from "../components/Dashboard/FarmCard";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../services/ColorPalette";
+import FarmDetailed from "../models/FarmDetailed";
 
-const ASSIGNED_FARMS: Farm[] = [
-  new Farm(
-    "1",
-    "Green Valley Farm",
-    "0702129283",
-    "Kandy",
-    "No. 123/A, North Lane, Maha Oya",
-    15000,
-    1.2,
-    430,
-    "Today",
-    "Good",
-    24,
-    new User("2", "Roshan", "0782822", "officer"),
-  ),
-  new Farm(
-    "2",
-    "Sunrise Poultry",
-    "0702129283",
-    "Kurunegala",
-    "No. 45, Temple Road, Kurunegala",
-    3200,
-    1.5,
-    395,
-    "Yesterday",
-    "Good",
-    19,
-    new User("2", "Roshan", "0782822", "officer"),
-  ),
-  new Farm(
-    "3",
-    "Blue Ridge Poultry",
-    "0702129283",
-    "Gampaha",
-    "No. 88, Ridge Lane, Gampaha",
-    4100,
-    2.1,
-    512,
-    "2 days ago",
-    "Fair",
-    31,
-    new User("2", "Roshan", "0782822", "officer"),
-  ),
+const ASSIGNED_FARMS: FarmDetailed[] = [
+  FarmDetailed.fromJson({
+    id: "1",
+    name: "Green Valley Farm",
+    tel: "0702129283",
+    city: "Kandy",
+    address: "No. 123/A, North Lane, Maha Oya",
+    activeChicks: 15000,
+    mortalityRate: 1.2,
+    avgWeight: 430,
+    lastVisit: "Today",
+    healthStatus: "Good",
+    batchAge: 24,
+    assignedTo: {
+      id: "2",
+      name: "Roshan",
+      phone: "0782822",
+      role: "officer",
+    },
+    feedConsumed: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }),
+
+  FarmDetailed.fromJson({
+    id: "3",
+    name: "Blue Ridge Poultry",
+    tel: "0702129283",
+    city: "Gampaha",
+    address: "ABC, DEF",
+    activeChicks: 4100,
+    mortalityRate: 2.1,
+    avgWeight: 512,
+    lastVisit: "2 days ago",
+    healthStatus: "Fair",
+    batchAge: 31,
+    feedConsumed: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }),
+
+  FarmDetailed.fromJson({
+    id: "2",
+    name: "Sunrise Poultry",
+    tel: "0702129283",
+    city: "Kurunegala",
+    address: "ABC, DEF",
+    activeChicks: 3200,
+    mortalityRate: 1.5,
+    avgWeight: 395,
+    lastVisit: "Yesterday",
+    healthStatus: "Good",
+    batchAge: 19,
+    feedConsumed: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }),
+
+  FarmDetailed.fromJson({
+    id: "4",
+    name: "Maha Oya Farm",
+    tel: "0702129283",
+    city: "Maha Oya",
+    address: "ABC, DEF",
+    activeChicks: 2800,
+    mortalityRate: 0,
+    avgWeight: 178,
+    lastVisit: "3 days ago",
+    healthStatus: "Poor",
+    batchAge: 8,
+    feedConsumed: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }),
 ];
 
 const PAST_VISITS = [
@@ -122,7 +154,7 @@ const PAST_VISITS = [
 const STATS = {
   totalVisits: 24,
   visitsThisMonth: 9,
-  assignedFarms: ASSIGNED_FARMS.length,
+  farms: ASSIGNED_FARMS.length,
   visitsDueToday: 2,
 };
 
@@ -368,7 +400,7 @@ export default function OfficerHomeScreen() {
             {/* Right mini stats */}
             <View style={s.heroRight}>
               <View style={s.miniStat}>
-                <Text style={s.miniStatValue}>{STATS.assignedFarms}</Text>
+                <Text style={s.miniStatValue}>{STATS.farms}</Text>
                 <Text style={s.miniStatLabel}>Assigned Farms</Text>
               </View>
               <View style={s.miniStatDivider} />

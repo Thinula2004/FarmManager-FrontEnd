@@ -1,37 +1,81 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from "@react-navigation/native";
+
 import OwnerHomeScreen from "../screens/OwnerHomeScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import LoginScreen from "../screens/LoginScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
 import Farm from "../models/Farm";
-import FarmPage from "../screens/FarmPage";
+import FarmScreen from "../screens/FarmScreen";
 import OfficerHomeScreen from "../screens/OfficerHomeScreen";
 import HomeScreen from "../screens/HomeScreen";
+import OfficersScreen from "../screens/OfficersScreen";
+import FarmsScreen from "../screens/FarmsScreen";
+import FarmDetailed from "../models/FarmDetailed";
+import SplashScreen from "../screens/SplashScreen";
+import BatchScreen from "../screens/BatchScreen";
+import Batch from "../models/Batch";
 
 export type RootStackParamList = {
+  Splash: undefined;
   Login: undefined;
   Home: undefined;
   Profile: undefined;
-  Farm: { farm: Farm };
+  Officers: undefined;
+  Farms: undefined;
+  Batch: { batchId: string };
+  Farm: { farm: FarmDetailed };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
+export function navigateFromStack(
+  page: keyof RootStackParamList,
+  params?: any,
+  reset: boolean = false,
+) {
+  if (!navigationRef.isReady()) {
+    return;
+  }
+
+  if (reset) {
+    navigationRef.reset({
+      index: 0,
+      routes: [
+        {
+          name: page as any,
+          params,
+        },
+      ],
+    });
+
+    return;
+  }
+
+  (navigationRef as any).navigate(page, params);
+}
+
 export default function Navigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName="Splash"
         screenOptions={({ navigation }) => ({
           headerStyle: {
             backgroundColor: "#f9fffb",
           },
+
           headerTitleStyle: {
             fontSize: 20,
           },
+
           headerRight: () => (
             <TouchableOpacity
               onPress={() => navigation.navigate("Profile")}
@@ -50,19 +94,49 @@ export default function Navigator() {
           component={LoginScreen}
           options={{ headerShown: false }}
         />
+
         <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{ headerShown: false }}
         />
+
         <Stack.Screen
           name="Farm"
-          component={FarmPage}
-          options={{ title: "Farm Details", headerShown: false }}
+          component={FarmScreen}
+          options={{
+            title: "Farm Details",
+            headerShown: false,
+          }}
         />
+
         <Stack.Screen
           name="Profile"
           component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Officers"
+          component={OfficersScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Farms"
+          component={FarmsScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Batch"
+          component={BatchScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

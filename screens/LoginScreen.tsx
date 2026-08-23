@@ -10,12 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { loginUser } from "../routes/userRoutes";
+import { loginUser } from "../controllers/userController";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import { getToken, getUser } from "../services/AuthService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/navigator";
+import { navigateFromStack, RootStackParamList } from "../navigation/navigator";
 import User from "../models/User";
 
 export default function LoginScreen() {
@@ -28,21 +28,6 @@ export default function LoginScreen() {
 
   type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
   const navigation = useNavigation<NavigationProp>();
-
-  useFocusEffect(
-    useCallback(() => {
-      const checkLogin = async () => {
-        const token = await getToken();
-        if (token) {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Home" as never }],
-          });
-        }
-      };
-      checkLogin();
-    }, []),
-  );
 
   const handleLogin = async () => {
     setMessage("");
@@ -85,8 +70,8 @@ export default function LoginScreen() {
           </View>
 
           {/* Brand name */}
-          <Text style={styles.title}>Crest Farm</Text>
-          <Text style={styles.subtitle}>Maha Oya</Text>
+          <Text style={styles.title}>Uva Farm</Text>
+          <Text style={styles.subtitle}>Girandurukotte</Text>
 
           {/* Divider */}
           <View style={styles.divider} />

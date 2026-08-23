@@ -1,15 +1,15 @@
 import { StyleSheet, Text, View } from "react-native";
-import Colors from "../services/ColorPalette";
+import Colors from "../../services/ColorPalette";
 
 export default function HealthBadge({
   status,
 }: {
-  status: "Good" | "Fair" | "Poor";
+  status: "Active" | "Partially Active" | "Inactive";
 }) {
   const map = {
-    Good: { bg: Colors.G100, text: Colors.G900, dot: Colors.G500 },
-    Fair: { bg: "#FEF9C3", text: "#92400E", dot: "#EAB308" },
-    Poor: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
+    Active: { bg: Colors.G100, text: Colors.G900, dot: Colors.G500 },
+    "Partially Active": { bg: "#FEF9C3", text: "#92400E", dot: "#EAB308" },
+    Inactive: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
   };
   const c = map[status];
   return (

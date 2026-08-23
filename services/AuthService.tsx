@@ -9,6 +9,10 @@ export async function saveAuth(token: string, user: User) {
   await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+export async function updateToken(token: string) {
+  await AsyncStorage.setItem(TOKEN_KEY, token);
+}
+
 export async function getToken() {
   return await AsyncStorage.getItem(TOKEN_KEY);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,97 +8,87 @@ import {
   StatusBar,
   SafeAreaView,
   Platform,
+  RefreshControl,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/navigator";
+import { navigateFromStack, RootStackParamList } from "../navigation/navigator";
 import User from "../models/User";
 import { getUser } from "../services/AuthService";
 import Farm from "../models/Farm";
-import FarmCard from "../components/FarmCard";
-import StatCard from "../components/StatCard";
-import AddFarmModal from "../components/AddFarmModel";
+import FarmCard from "../components/Dashboard/FarmCard";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../services/ColorPalette";
-
-const FARMS = [
-  new Farm(
-    "1",
-    "Green Valley Farm",
-    "0702129283",
-    "Kandy",
-    "No. 123/A, North Lane, Maha Oya",
-    15000,
-    1.2,
-    430,
-    "Today",
-    "Good",
-    24,
-    new User("2", "Roshan", "0782822", "officer"),
-  ),
-  new Farm(
-    "3",
-    "Blue Ridge Poultry",
-    "0702129283",
-    "Gampaha",
-    "ABC, DEF",
-    4100,
-    2.1,
-    512,
-    "2 days ago",
-    "Fair",
-    31,
-  ),
-  new Farm(
-    "2",
-    "Sunrise Poultry",
-    "0702129283",
-    "Kurunegala",
-    "ABC, DEF",
-    3200,
-    1.5,
-    395,
-    "Yesterday",
-    "Good",
-    19,
-  ),
-  new Farm(
-    "4",
-    "Maha Oya Farm",
-    "0702129283",
-    "Maha Oya",
-    "ABC, DEF",
-    2800,
-    0,
-    178,
-    "3 days ago",
-    "Poor",
-    8,
-  ),
-];
-
-const SUMMARY = {
-  totalFarms: 4,
-  totalChicks: 15100,
-  mortalityToday: 38,
-  avgWeight: 379,
-};
-
-// ─────────────────────────────────────────────────────────
+import FarmDetailed from "../models/FarmDetailed";
+import DashboardSummery from "../models/DashboardSummery";
+import { getDashboardSummery } from "../controllers/statController";
+import { getAllFarmsDetailed } from "../controllers/farmController";
+import LoadingOverlay from "../components/Common/LoadingOverlay";
 
 export default function OwnerHomeScreen() {
-  const [showFarmModal, setShowFarmModal] = useState(false);
+  const [summery, setSummery] = useState<DashboardSummery | null>(null);
+  const [farms, setFarms] = useState<FarmDetailed[]>([]);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasLoadedOnce = useRef(false);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const storedUser = await getUser();
-      setUser(storedUser);
-    };
-    loadUser();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const loadUser = async () => {
+        const storedUser = await getUser();
+        setUser(storedUser);
+      };
+      loadUser();
+      const firstLoad = !hasLoadedOnce.current;
+
+      hasLoadedOnce.current = true;
+
+      loadData(firstLoad);
+    }, []),
+  );
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadData(false);
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  const loadData = async (showLoading = false) => {
+    try {
+      if (showLoading) {
+        setLoading(true);
+      }
+
+      await Promise.all([loadSummery(), loadFarms()]);
+    } catch (error) {
+      console.error("Failed to load data:", error);
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadFarms = async () => {
+    const data = await getAllFarmsDetailed();
+
+    setFarms(data);
+  };
+
+  const loadSummery = async () => {
+    const data = await getDashboardSummery();
+
+    if (data) {
+      setSummery(data);
+    }
+  };
 
   const initials = user?.name
     ? user.name
@@ -123,8 +113,15 @@ export default function OwnerHomeScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.G700}
+            colors={[Colors.G700]}
+          />
+        }
       >
-        {/* ── Header ── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.dateLabel}>{today}</Text>
@@ -138,7 +135,6 @@ export default function OwnerHomeScreen() {
             onPress={() => navigation.navigate("Profile")}
           >
             <Text style={styles.avatarText}>{initials}</Text>
-            {/* Online indicator dot */}
             <View style={styles.avatarDot} />
           </TouchableOpacity>
         </View>
@@ -148,69 +144,61 @@ export default function OwnerHomeScreen() {
           <View style={styles.heroRingInner} />
 
           <View style={styles.heroContent}>
-            {/* Left: hero stat */}
             <View style={styles.heroLeft}>
               <Text style={styles.heroLabel}>LIVE CHICKS</Text>
-              <Text style={styles.heroNumber}>
-                {SUMMARY.totalChicks.toLocaleString()}
-              </Text>
+              <Text style={styles.heroNumber}>{summery?.liveChicks}</Text>
               <View style={styles.heroBadge}>
                 <View style={styles.heroBadgeDot} />
                 <Text style={styles.heroBadgeText}>All systems active</Text>
               </View>
             </View>
 
-            {/* Right: supporting stats */}
             <View style={styles.heroRight}>
               <View style={styles.miniStat}>
-                <Text style={styles.miniStatValue}>{SUMMARY.totalFarms}</Text>
+                <Text style={styles.miniStatValue}>{summery?.farmCount}</Text>
                 <Text style={styles.miniStatLabel}>Farms</Text>
               </View>
               <View style={styles.miniStatDivider} />
               <View style={styles.miniStat}>
                 <Text style={[styles.miniStatValue, styles.redValue]}>
-                  {SUMMARY.mortalityToday}
+                  {summery?.totalMortality}
                 </Text>
-                <Text style={styles.miniStatLabel}>Deaths Today</Text>
+                <Text style={styles.miniStatLabel}>Mortality</Text>
               </View>
               <View style={styles.miniStatDivider} />
               <View style={styles.miniStat}>
-                <Text style={styles.miniStatValue}>{SUMMARY.avgWeight}g</Text>
-                <Text style={styles.miniStatLabel}>Avg Weight</Text>
+                <Text style={styles.miniStatValue}>
+                  {summery?.officerCount}
+                </Text>
+                <Text style={styles.miniStatLabel}>Officers</Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* ── Section Header ── */}
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleGroup}>
             <Text style={styles.sectionTitle}>Your Farms</Text>
             <View style={styles.countPill}>
-              <Text style={styles.countText}>{FARMS.length} active</Text>
+              <Text style={styles.countText}>{farms.length} farms</Text>
             </View>
           </View>
           <TouchableOpacity
             style={styles.addBtn}
             activeOpacity={0.8}
-            onPress={() => setShowFarmModal(true)}
+            onPress={() => navigateFromStack("Farms")}
           >
             <Ionicons name="add" size={22} color={Colors.WHITE} />
           </TouchableOpacity>
         </View>
 
-        {/* ── Farm Cards ── */}
-        {FARMS.map((farm) => (
+        {farms.map((farm) => (
           <FarmCard key={farm.id} farm={farm} />
         ))}
 
         <View style={{ height: 40 }} />
       </ScrollView>
-
-      <AddFarmModal
-        visible={showFarmModal}
-        onClose={() => setShowFarmModal(false)}
-      />
+      <LoadingOverlay visible={loading} />
     </SafeAreaView>
   );
 }
@@ -227,7 +215,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  // ── Header ──────────────────────────────────────────
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -266,7 +253,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 4,
-    // Green glow ring
     borderWidth: 3,
     borderColor: Colors.G200,
     ...Platform.select({
@@ -297,7 +283,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.WHITE,
   },
 
-  // ── Hero Banner ──────────────────────────────────────────
   heroBanner: {
     backgroundColor: Colors.G700,
     borderRadius: 24,
@@ -315,7 +300,6 @@ const styles = StyleSheet.create({
       android: { elevation: 8 },
     }),
   },
-  // Decorative rings layered behind content
   heroRingOuter: {
     position: "absolute",
     top: -60,
@@ -410,10 +394,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   redValue: {
-    color: "#ff9191", // soft red that reads well on dark green
+    color: "#ff9191",
   },
 
-  // ── Section header ───────────────────────────────────────
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

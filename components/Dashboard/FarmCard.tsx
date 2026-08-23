@@ -1,14 +1,14 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Farm from "../models/Farm";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/navigator";
+import { RootStackParamList } from "../../navigation/navigator";
 import { useNavigation } from "@react-navigation/native";
-import HealthBadge from "./HealthBadge";
-import Colors from "../services/ColorPalette";
+import HealthBadge from "../Common/HealthBadge";
+import Colors from "../../services/ColorPalette";
+import FarmDetailed from "../../models/FarmDetailed";
+import { getTimeSince } from "../../services/Util";
 
-export default function FarmCard({ farm }: { farm: Farm }) {
-  const highMortality = farm.mortalityRate > 10;
+export default function FarmCard({ farm }: { farm: FarmDetailed }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -33,51 +33,43 @@ export default function FarmCard({ farm }: { farm: Farm }) {
           <Text style={cardStyles.location}>📍 {farm.city}</Text>
         </View>
 
-        <HealthBadge status={farm.healthStatus} />
+        <HealthBadge status={farm.status} />
       </View>
 
       {/* Stats grid */}
       <View style={cardStyles.statsRow}>
         <View style={cardStyles.stat}>
-          <Text style={cardStyles.statValue}>
-            {farm.activeChicks.toLocaleString()}
-          </Text>
+          <Text style={cardStyles.statValue}>{farm.liveChicks}</Text>
           <Text style={cardStyles.statLabel}>Live Chicks</Text>
         </View>
 
         <View style={cardStyles.statDivider} />
 
         <View style={cardStyles.stat}>
-          <Text
-            style={[
-              cardStyles.statValue,
-              highMortality && { color: "#EF4444" },
-            ]}
-          >
-            {farm.mortalityRate} %
+          <Text style={cardStyles.statValue}>{farm.activeBatchCount}</Text>
+          <Text style={cardStyles.statLabel}>Act Batches</Text>
+        </View>
+
+        <View style={cardStyles.statDivider} />
+
+        <View style={cardStyles.stat}>
+          <Text style={cardStyles.statValue}>{farm.totalBatchCount}</Text>
+          <Text style={cardStyles.statLabel}>Tot Batches</Text>
+        </View>
+
+        <View style={cardStyles.statDivider} />
+
+        <View style={cardStyles.stat}>
+          <Text style={[cardStyles.statValue, { color: Colors.RED600 }]}>
+            {farm.totalMortality}
           </Text>
           <Text style={cardStyles.statLabel}>Mortality</Text>
         </View>
-
-        <View style={cardStyles.statDivider} />
-
-        <View style={cardStyles.stat}>
-          <Text style={cardStyles.statValue}>{farm.avgWeight} g</Text>
-          <Text style={cardStyles.statLabel}>Avg Weight</Text>
-        </View>
-
-        <View style={cardStyles.statDivider} />
-
-        <View style={cardStyles.stat}>
-          <Text style={cardStyles.statValue}>Day {farm.batchAge}</Text>
-          <Text style={cardStyles.statLabel}>Batch Age</Text>
-        </View>
       </View>
 
-      {/* Footer */}
       <View style={cardStyles.footer}>
         <Text style={cardStyles.lastVisit}>
-          🕐 Last visit: {farm.lastVisit}
+          Last visit: {getTimeSince(farm.lastVisit)}
         </Text>
         <View style={cardStyles.detailsBtn}>
           <Text style={cardStyles.detailsBtnText}>Details →</Text>
@@ -147,10 +139,12 @@ const cardStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     color: Colors.SLATE700,
-    marginBottom: 3,
+    marginBottom: 8,
   },
   statLabel: {
-    fontSize: 10,
+    flexWrap: "wrap",
+    fontSize: 8,
+    textAlign: "center",
     color: Colors.SLATE500,
     textTransform: "uppercase",
     letterSpacing: 0.5,
