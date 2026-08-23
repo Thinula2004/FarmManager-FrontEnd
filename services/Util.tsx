@@ -1,5 +1,7 @@
 import Constants from "expo-constants";
 import Toast from "react-native-toast-message";
+import { SupplyCategory } from "../enums/SupplyType";
+import { Ionicons } from "@expo/vector-icons";
 
 export const eclipseText = (text: string, length: number): string => {
   if (text.length <= length) {
@@ -92,4 +94,23 @@ export function formatDate(date: Date, char: string = " "): string {
     2,
     "0",
   )}${char}${String(date.getDate()).padStart(2, "0")}`;
+}
+
+export function getSupplyIcon(
+  category: SupplyCategory,
+): keyof typeof Ionicons.glyphMap {
+  switch (category) {
+    case SupplyCategory.Vitamin:
+      return "shield-checkmark-outline";
+    case SupplyCategory.Medicine:
+      return "medkit-outline";
+    case SupplyCategory.Supplement:
+      return "flask-outline";
+    default:
+      return "ellipsis-vertical-circle-outline";
+  }
+}
+
+export function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }

@@ -15,12 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../services/ColorPalette";
 import SectionHeader from "../components/BatchScreen/SectionHeader";
-import { SupplyType } from "../enums/SupplyType";
+import { SupplyCategory } from "../enums/SupplyType";
 import { useCallback, useRef, useState } from "react";
 import Batch from "../models/Batch";
 import {
+  capitalize,
   formatDate,
   getDaysSince,
+  getSupplyIcon,
   getTimeSince,
   showToast,
 } from "../services/Util";
@@ -43,6 +45,7 @@ import {
   deleteFeedEntry,
   getFeedEntriesFromBatch,
 } from "../controllers/feedController";
+import AddSupplyOverlay from "../components/BatchScreen/AddSupplyOverlay";
 
 const STATUS_CONFIG = {
   Ongoing: {
@@ -65,26 +68,13 @@ const STATUS_CONFIG = {
   },
 };
 
-function supplyIcon(category: SupplyType): keyof typeof Ionicons.glyphMap {
+function supplyCategoryColor(category: SupplyCategory) {
   switch (category) {
-    case SupplyType.Vitamin:
-      return "shield-checkmark-outline";
-    case SupplyType.Medicine:
-      return "medkit-outline";
-    case SupplyType.Supplement:
-      return "flask-outline";
-    default:
-      return "cube-outline";
-  }
-}
-
-function supplyCategoryColor(category: SupplyType) {
-  switch (category) {
-    case SupplyType.Vitamin:
+    case SupplyCategory.Vitamin:
       return { bg: Colors.G50, icon: Colors.G700, border: Colors.G100 };
-    case SupplyType.Medicine:
+    case SupplyCategory.Medicine:
       return { bg: Colors.RED50, icon: Colors.RED600, border: Colors.RED100 };
-    case SupplyType.Supplement:
+    case SupplyCategory.Supplement:
       return {
         bg: Colors.AMBER50,
         icon: Colors.AMBER600,
@@ -113,6 +103,8 @@ export default function BatchScreen({ route }: Props) {
   const [actionsExpanded, setActionsExpanded] = useState(false);
   const hasLoadedOnce = useRef(false);
   const [feedOverlayVisible, setFeedOverlayVisible] = useState<boolean>(false);
+  const [supplyOverlayVisible, setSupplyOverlayVisible] =
+    useState<boolean>(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -159,7 +151,6 @@ export default function BatchScreen({ route }: Props) {
     const data = await getBatchByID(batchId);
     if (data) {
       setBatch(data);
-      console.log(batch?.initialCount);
     }
   };
 
@@ -306,6 +297,7 @@ export default function BatchScreen({ route }: Props) {
                   activeOpacity={0.7}
                   onPress={() => {
                     setActionsExpanded(false);
+                    setSupplyOverlayVisible(true);
                   }}
                 >
                   <Ionicons
@@ -571,7 +563,7 @@ export default function BatchScreen({ route }: Props) {
                     ]}
                   >
                     <Ionicons
-                      name={supplyIcon(entry.type)}
+                      name={getSupplyIcon(entry.type)}
                       size={16}
                       color={col.icon}
                     />
@@ -581,7 +573,7 @@ export default function BatchScreen({ route }: Props) {
                     <Text style={s.supplyName}>{entry.name}</Text>
                     <View style={s.supplyMeta}>
                       <Text style={[s.supplyCatLabel, { color: col.icon }]}>
-                        {entry.type}
+                        {capitalize(entry.type)}
                       </Text>
                       <Text style={s.supplyDot}>·</Text>
                       <Text style={s.supplyDate}>
@@ -648,6 +640,14 @@ export default function BatchScreen({ route }: Props) {
           loadFeedEntries();
           loadBatch();
         }}
+      />
+      <AddSupplyOverlay
+        batch={batch}
+        onClose={() => {
+          setSupplyOverlayVisible(false);
+          loadSupplies();
+        }}
+        visible={supplyOverlayVisible}
       />
     </SafeAreaView>
   );

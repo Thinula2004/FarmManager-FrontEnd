@@ -42,7 +42,6 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
 
   useEffect(() => {
-    console.log("running");
     loadBreeds();
   }, [visible]);
 

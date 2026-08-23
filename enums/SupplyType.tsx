@@ -1,5 +1,6 @@
-export enum SupplyType {
-  Supplement = "Supplement",
-  Medicine = "Medicine",
-  Vitamin = "Vitamin",
+export enum SupplyCategory {
+  Supplement = "SUPPLEMENT",
+  Medicine = "MEDICINE",
+  Vitamin = "VITAMIN",
+  Other = "OTHER",
 }
