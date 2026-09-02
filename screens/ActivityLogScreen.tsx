@@ -1,160 +1,35 @@
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  SectionList,
   StyleSheet,
   Platform,
   RefreshControl,
   TouchableOpacity,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Colors from "../services/ColorPalette";
 import Activity from "../models/Activity";
-import { ActivityAction } from "../enums/ActivityAction";
-import { ActivityEntity } from "../enums/ActivityEntity";
-import User from "../models/User";
-import { useCallback, useRef, useState } from "react";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import LoadingOverlay from "../components/Common/LoadingOverlay";
 import { getActivities } from "../controllers/activityController";
+import ActivityRow from "../components/ActivityLogScreen/ActivityRow";
 
-type ActivityGroup = {
+type ActivitySection = {
   label: string;
-  entries: Activity[];
+  data: Activity[];
 };
 
-type ActionStyle = {
-  color: string;
-  bg: string;
-  border: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  verb: string;
-};
-
-const ACTION_STYLE: Record<ActivityAction, ActionStyle> = {
-  [ActivityAction.CREATED]: {
-    color: "#3B6D11",
-    bg: "#EAF3DE",
-    border: "#C0DD97",
-    icon: "add-circle-outline",
-    verb: "Created",
-  },
-  [ActivityAction.ADDED]: {
-    color: "#3B6D11",
-    bg: "#EAF3DE",
-    border: "#C0DD97",
-    icon: "add-outline",
-    verb: "Added",
-  },
-  [ActivityAction.RECORDED]: {
-    color: "#0F6E56",
-    bg: "#E1F5EE",
-    border: "#9FE1CB",
-    icon: "clipboard-outline",
-    verb: "Recorded",
-  },
-  [ActivityAction.UPDATED]: {
-    color: "#854F0B",
-    bg: "#FAEEDA",
-    border: "#FAC775",
-    icon: "pencil-outline",
-    verb: "Updated",
-  },
-  [ActivityAction.DELETED]: {
-    color: "#A32D2D",
-    bg: "#FCEBEB",
-    border: "#F7C1C1",
-    icon: "trash-outline",
-    verb: "Deleted",
-  },
-  [ActivityAction.OPENED]: {
-    color: "#185FA5",
-    bg: "#E6F1FB",
-    border: "#B5D4F4",
-    icon: "lock-open-outline",
-    verb: "Opened",
-  },
-  [ActivityAction.CLOSED]: {
-    color: "#5F5E5A",
-    bg: "#F1EFE8",
-    border: "#D3D1C7",
-    icon: "lock-closed-outline",
-    verb: "Closed",
-  },
-  [ActivityAction.ACTIVATED]: {
-    color: "#185FA5",
-    bg: "#E6F1FB",
-    border: "#B5D4F4",
-    icon: "checkmark-circle-outline",
-    verb: "Activated",
-  },
-  [ActivityAction.DEACTIVATED]: {
-    color: "#5F5E5A",
-    bg: "#F1EFE8",
-    border: "#D3D1C7",
-    icon: "remove-circle-outline",
-    verb: "Deactivated",
-  },
-};
-
-type EntityStyle = {
-  color: string;
-  bg: string;
-  border: string;
-  icon: keyof typeof Ionicons.glyphMap;
-};
-
-const ENTITY_STYLE: Record<ActivityEntity, EntityStyle> = {
-  [ActivityEntity.FARM]: {
-    color: "#3B6D11",
-    bg: "#EAF3DE",
-    border: "#C0DD97",
-    icon: "storefront-outline",
-  },
-  [ActivityEntity.BATCH]: {
-    color: "#0F6E56",
-    bg: "#E1F5EE",
-    border: "#9FE1CB",
-    icon: "layers-outline",
-  },
-  [ActivityEntity.VISIT]: {
-    color: "#0F6E56",
-    bg: "#E1F5EE",
-    border: "#9FE1CB",
-    icon: "clipboard-outline",
-  },
-  [ActivityEntity.OFFICER]: {
-    color: "#185FA5",
-    bg: "#E6F1FB",
-    border: "#B5D4F4",
-    icon: "person-outline",
-  },
-  [ActivityEntity.FEED_ENTRY]: {
-    color: "#854F0B",
-    bg: "#FAEEDA",
-    border: "#FAC775",
-    icon: "nutrition-outline",
-  },
-  [ActivityEntity.SUPPLY]: {
-    color: "#712B13",
-    bg: "#FAECE7",
-    border: "#F5C4B3",
-    icon: "medkit-outline",
-  },
-  [ActivityEntity.USER]: {
-    color: "#5F5E5A",
-    bg: "#F1EFE8",
-    border: "#D3D1C7",
-    icon: "person-circle-outline",
-  },
-};
-
-function groupByDate(activities: Activity[]): ActivityGroup[] {
+function groupByDate(activities: Activity[]): ActivitySection[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
+  const order: string[] = [];
   const groups: Map<string, Activity[]> = new Map();
 
   for (const activity of activities) {
@@ -174,31 +49,14 @@ function groupByDate(activities: Activity[]): ActivityGroup[] {
       });
     }
 
-    if (!groups.has(label)) groups.set(label, []);
+    if (!groups.has(label)) {
+      groups.set(label, []);
+      order.push(label);
+    }
     groups.get(label)!.push(activity);
   }
 
-  return Array.from(groups.entries()).map(([label, entries]) => ({
-    label,
-    entries,
-  }));
-}
-
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return (
-    parts.length > 1
-      ? parts[0][0] + parts[parts.length - 1][0]
-      : (parts[0]?.slice(0, 2) ?? "?")
-  ).toUpperCase();
+  return order.map((label) => ({ label, data: groups.get(label)! }));
 }
 
 export default function ActivityLogScreen() {
@@ -207,39 +65,32 @@ export default function ActivityLogScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const hasLoadedOnce = useRef(false);
-
-  const groups = groupByDate(activities);
+  const sections = useMemo(() => groupByDate(activities), [activities]);
 
   useFocusEffect(
     useCallback(() => {
       const firstLoad = !hasLoadedOnce.current;
-
       hasLoadedOnce.current = true;
-
       loadData(firstLoad);
     }, []),
   );
 
   const loadData = async (showLoading = false) => {
     try {
-      if (showLoading) {
-        setLoading(true);
-      }
-
-      await Promise.all([loadActivities()]);
+      if (showLoading) setLoading(true);
+      const data = await getActivities();
+      setActivities(data);
     } catch (error) {
       console.error("Failed to load data:", error);
     } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
+      if (showLoading) setLoading(false);
     }
   };
 
   const onRefresh = async () => {
     try {
       setRefreshing(true);
-      loadData();
+      await loadData();
     } catch (error) {
       console.error("Refresh failed:", error);
     } finally {
@@ -247,18 +98,41 @@ export default function ActivityLogScreen() {
     }
   };
 
-  const loadActivities = async () => {
-    const data = await getActivities();
-    setActivities(data);
-  };
+  const renderItem = useCallback(
+    ({
+      item,
+      index,
+      section,
+    }: {
+      item: Activity;
+      index: number;
+      section: ActivitySection;
+    }) => (
+      <ActivityRow
+        activity={item}
+        isFirst={index === 0}
+        isLast={index === section.data.length - 1}
+      />
+    ),
+    [],
+  );
 
-  const testUser = User.fromJson({ name: "Thinula" });
-
-  console.log("TEST USER:", testUser);
-  console.log("TEST USER NAME:", testUser.name);
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: ActivitySection }) => (
+      <View style={s.sectionHeaderWrap}>
+        <View style={s.dateLabelRow}>
+          <Text style={s.dateLabelText}>{section.label}</Text>
+          <View style={s.dateLabelLine} />
+        </View>
+      </View>
+    ),
+    [],
+  );
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={s.safe} edges={["left", "right", "bottom"]}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.G950} />
+
       <View style={s.topBar}>
         <TouchableOpacity
           style={s.backBtn}
@@ -272,162 +146,58 @@ export default function ActivityLogScreen() {
           <Text style={s.topBarTitle}>Activity Log</Text>
 
           <Text style={s.topBarSub}>
-            View the activities performed by owners and officers
+            Actions performed by owners and officers
           </Text>
         </View>
       </View>
-      <ScrollView
-        style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
+        style={s.list}
+        contentContainerStyle={s.listContent}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        removeClippedSubviews={Platform.OS === "android"}
         refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={Colors.G700}
-              colors={[Colors.G700]}
-            />
-          ) : undefined
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.G700}
+            colors={[Colors.G700]}
+          />
         }
-      >
-        {activities.length > 0 ? (
-          <View>
-            {groups.map((group) => (
-              <View key={group.label} style={s.group}>
-                {/* Date label */}
-                <View style={s.dateLabelRow}>
-                  <Text style={s.dateLabelText}>{group.label}</Text>
-                  <View style={s.dateLabelLine} />
-                </View>
-
-                {/* Entries */}
-                {group.entries.map((activity, idx) => {
-                  const action =
-                    ACTION_STYLE[activity.action as ActivityAction];
-                  const entity =
-                    ENTITY_STYLE[activity.entity as ActivityEntity];
-                  const isFirst = idx === 0;
-                  const isLast = idx === group.entries.length - 1;
-
-                  return (
-                    <View key={activity.id} style={s.entry}>
-                      <View style={s.timelineCol}>
-                        <View
-                          style={[
-                            s.tlConnector,
-                            isFirst && s.tlConnectorInvisible,
-                          ]}
-                        />
-                        <View
-                          style={[
-                            s.tlNode,
-                            {
-                              backgroundColor: action.bg,
-                              borderColor: action.border,
-                            },
-                          ]}
-                        >
-                          <Ionicons
-                            name={action.icon}
-                            size={13}
-                            color={action.color}
-                          />
-                        </View>
-                        <View
-                          style={[
-                            s.tlConnector,
-                            isLast && s.tlConnectorInvisible,
-                          ]}
-                        />
-                      </View>
-
-                      {/* Entry body */}
-                      <View style={[s.entryBody, isLast && s.entryBodyLast]}>
-                        <View style={s.entryRow}>
-                          <View style={s.entryMain}>
-                            {/* Actor row */}
-                            <View style={s.actorRow}>
-                              <View style={s.actorAvatar}>
-                                <Text style={s.actorInitials}>
-                                  {getInitials(activity.user.name)}
-                                </Text>
-                              </View>
-                              <Text style={s.actorName}>
-                                {activity.user.name}
-                              </Text>
-                            </View>
-
-                            {/* Action line */}
-                            <View style={s.actionLine}>
-                              <Text
-                                style={[s.actionVerb, { color: action.color }]}
-                              >
-                                {action.verb}{" "}
-                              </Text>
-                              <Text style={s.actionConnector}>{"a "}</Text>
-                              <View
-                                style={[
-                                  s.entityPill,
-                                  {
-                                    backgroundColor: entity.bg,
-                                    borderColor: entity.border,
-                                  },
-                                ]}
-                              >
-                                <Ionicons
-                                  name={entity.icon}
-                                  size={10}
-                                  color={entity.color}
-                                />
-                                <Text
-                                  style={[
-                                    s.entityPillText,
-                                    { color: entity.color },
-                                  ]}
-                                >
-                                  {activity.entity.charAt(0) +
-                                    activity.entity.slice(1).toLowerCase()}
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-
-                          {/* Timestamp */}
-                          <Text style={s.timestamp}>
-                            {formatTime(activity.createdAt.toISOString())}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
+        ListEmptyComponent={
+          !loading ? (
+            <View style={s.emptyWrap}>
+              <View style={s.emptyIconWrap}>
+                <Ionicons
+                  name="time-outline"
+                  size={26}
+                  color={Colors.SLATE500}
+                />
               </View>
-            ))}
-          </View>
-        ) : (
-          <View style={s.emptyWrap}>
-            <View style={s.emptyIconWrap}>
-              <Ionicons name="time-outline" size={28} color={Colors.SLATE500} />
+              <Text style={s.emptyTitle}>No activity yet</Text>
+              <Text style={s.emptyBody}>
+                Actions on farms, batches, and officers will appear here.
+              </Text>
             </View>
-            <Text style={s.emptyTitle}>No activity yet</Text>
-            <Text style={s.emptyBody}>
-              Actions on farms, batches, and officers will appear here.
-            </Text>
-          </View>
-        )}
+          ) : null
+        }
+      />
 
-        <View style={{ height: 32 }} />
-      </ScrollView>
       <LoadingOverlay visible={loading} />
-    </View>
+    </SafeAreaView>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 16 },
+  safe: { flex: 1, backgroundColor: Colors.G50 },
 
   topBar: {
     backgroundColor: Colors.G700,
@@ -477,9 +247,30 @@ const s = StyleSheet.create({
     marginTop: 1,
   },
 
-  // ── Empty state ──────────────────────────────────────────
-  emptyWrap: {
+  list: { flex: 1 },
+  listContent: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 32 },
+
+  sectionHeaderWrap: { backgroundColor: Colors.G50 },
+  dateLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  dateLabelText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.SLATE500,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  dateLabelLine: {
     flex: 1,
+    height: 1,
+    backgroundColor: Colors.SLATE200,
+  },
+  emptyWrap: {
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 32,
@@ -509,159 +300,5 @@ const s = StyleSheet.create({
     color: Colors.SLATE500,
     textAlign: "center",
     lineHeight: 20,
-  },
-
-  // ── Group ────────────────────────────────────────────────
-  group: {
-    marginBottom: 4,
-  },
-
-  // ── Date label ───────────────────────────────────────────
-  dateLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
-  },
-  dateLabelText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: Colors.SLATE500,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  dateLabelLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.SLATE200,
-  },
-
-  // ── Entry ────────────────────────────────────────────────
-  entry: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    paddingHorizontal: 16,
-  },
-
-  // ── Timeline column ──────────────────────────────────────
-  timelineCol: {
-    width: 36,
-    alignItems: "center",
-    marginRight: 5,
-    flexShrink: 0,
-  },
-  tlConnector: {
-    width: 1.5,
-    flex: 1,
-    minHeight: 8,
-    backgroundColor: Colors.SLATE200,
-  },
-  tlConnectorInvisible: {
-    backgroundColor: "transparent",
-  },
-  tlNode: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-
-  // ── Entry body ───────────────────────────────────────────
-  entryBody: {
-    flex: 1,
-    backgroundColor: Colors.WHITE,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    marginVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.SLATE300,
-  },
-  entryBodyLast: {
-    paddingBottom: 6,
-  },
-  entryRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  entryMain: {
-    flex: 1,
-    gap: 4,
-  },
-
-  // ── Actor row ────────────────────────────────────────────
-  actorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  actorAvatar: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    backgroundColor: Colors.G100,
-    borderWidth: 1,
-    borderColor: Colors.G200,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actorInitials: {
-    fontSize: 8,
-    fontWeight: "800",
-    color: Colors.G700,
-    letterSpacing: 0.3,
-  },
-  actorName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.SLATE500,
-  },
-
-  // ── Action line ──────────────────────────────────────────
-  actionLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 3,
-  },
-  actionVerb: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: -0.1,
-  },
-  actionConnector: {
-    fontSize: 13,
-    fontWeight: "400",
-    color: Colors.SLATE700,
-  },
-  entityPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 0.5,
-  },
-  entityPillText: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.1,
-  },
-
-  // ── Timestamp ────────────────────────────────────────────
-  timestamp: {
-    fontSize: 11,
-    color: Colors.SLATE500,
-    fontWeight: "500",
-    paddingTop: 2,
-    flexShrink: 0,
   },
 });
