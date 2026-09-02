@@ -109,7 +109,6 @@ export default function LoadingOverlay({ visible }: Props) {
 
   useEffect(() => {
     if (visible) {
-      // Mount first, then fade in
       setMounted(true);
 
       Animated.timing(opacity, {
@@ -118,7 +117,6 @@ export default function LoadingOverlay({ visible }: Props) {
         useNativeDriver: true,
       }).start();
     } else {
-      // Fade out first
       Animated.timing(opacity, {
         toValue: 0,
         duration: 200,
@@ -134,20 +132,34 @@ export default function LoadingOverlay({ visible }: Props) {
   if (!mounted) return null;
 
   return (
-    <Modal transparent animationType="none" visible={mounted}>
-      <Animated.View style={[s.overlay, { opacity }]}>
-        <RoosterAnimation />
-        <Dots />
-      </Animated.View>
-    </Modal>
+    <Animated.View
+      style={[
+        s.overlay,
+        {
+          opacity,
+        },
+      ]}
+    >
+      <RoosterAnimation />
+      <Dots />
+    </Animated.View>
   );
 }
 
 const s = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+
     backgroundColor: Colors.WHITE,
+
     alignItems: "center",
     justifyContent: "center",
+
+    zIndex: 9999,
+    elevation: 9999,
   },
 });

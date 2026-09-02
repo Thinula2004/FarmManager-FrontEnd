@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Colors from "../../services/ColorPalette";
 import { changePassword } from "../../controllers/userController";
 import { showToast } from "../../services/Util";
+import Loader from "../Common/Loader";
 
 interface Props {
   visible: boolean;
@@ -26,6 +27,7 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -55,7 +57,11 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
       return;
     }
 
+    setLoading(true);
+
     const success = await changePassword(password);
+
+    setLoading(false);
 
     if (success) {
       showToast("success", "Password updated successfully");
@@ -257,18 +263,25 @@ export default function ChangePasswordModal({ visible, onClose }: Props) {
                 <Text style={s.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={s.updateBtn}
-                onPress={onUpdate}
-                activeOpacity={0.85}
-              >
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={16}
-                  color={Colors.WHITE}
+              <View style={s.updateBtn}>
+                <Loader
+                  visible={loading}
+                  background={Colors.G700}
+                  foreground={Colors.WHITE}
                 />
-                <Text style={s.updateText}>Update Password</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flexDirection: "row", gap: 8 }}
+                  onPress={onUpdate}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={16}
+                    color={Colors.WHITE}
+                  />
+                  <Text style={s.updateText}>Update Password</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={{ height: 32 }} />
@@ -491,13 +504,13 @@ const s = StyleSheet.create({
     color: Colors.SLATE500,
   },
   updateBtn: {
+    overflow: "hidden",
     flex: 2,
     flexDirection: "row",
     paddingVertical: 15,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
     backgroundColor: Colors.G700,
     ...Platform.select({
       ios: {

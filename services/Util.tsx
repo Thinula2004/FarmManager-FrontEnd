@@ -96,6 +96,15 @@ export function formatDate(date: Date, char: string = " "): string {
   )}${char}${String(date.getDate()).padStart(2, "0")}`;
 }
 
+export function formatTime(date: Date): string {
+  return `${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(date.getDate()).padStart(2, "0")}-${date.getFullYear()} ${String(
+    date.getHours(),
+  ).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
 export function getSupplyIcon(
   category: SupplyCategory,
 ): keyof typeof Ionicons.glyphMap {
@@ -113,4 +122,29 @@ export function getSupplyIcon(
 
 export function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
+export function formatWeight(
+  weight: number | undefined,
+  isUnit: boolean = true,
+): string {
+  if (!weight) {
+    if (!isUnit) {
+      return "0";
+    }
+    return "0 G";
+  }
+  if (weight < 1000) {
+    if (isUnit) {
+      return `${weight.toFixed(2).replace(/\.00$/, "")} G`;
+    } else {
+      return `${weight.toFixed(2).replace(/\.00$/, "")}`;
+    }
+  }
+
+  if (isUnit) {
+    return `${(weight / 1000).toFixed(2)} KG`;
+  } else {
+    return `${(weight / 1000).toFixed(2)}`;
+  }
 }

@@ -10,7 +10,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { logout } from "../../services/AuthService";
 import { navigateFromStack } from "../../navigation/navigator";
-import { onSessionExpired } from "../../services/APIController";
+import {
+  onSessionExpired,
+  resetSessionExpiredNotification,
+} from "../../services/APIController";
 import Colors from "../../services/ColorPalette";
 
 export default function SessionExpiredModal() {
@@ -25,13 +28,12 @@ export default function SessionExpiredModal() {
   }, []);
 
   const onContinue = async () => {
-    // Hide immediately
     setVisible(false);
 
-    // Clear authentication
     await logout();
 
-    // Navigate to login
+    resetSessionExpiredNotification();
+
     navigateFromStack("Login", undefined, true);
   };
 

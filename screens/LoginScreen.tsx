@@ -64,23 +64,18 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
-          {/* Logo card */}
           <View style={styles.logoCard}>
             <Image source={require("../assets/logo.png")} style={styles.logo} />
           </View>
 
-          {/* Brand name */}
           <Text style={styles.title}>Uva Farm</Text>
           <Text style={styles.subtitle}>Girandurukotte</Text>
 
-          {/* Divider */}
           <View style={styles.divider} />
 
           <Text style={styles.signInLabel}>Sign in to your account</Text>
 
-          {/* Form card */}
           <View style={styles.formCard}>
-            {/* Phone input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Phone Number</Text>
               <TextInput
@@ -131,7 +126,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Footer */}
-          <Text style={styles.footer}>Crest Farm Management System © 2026</Text>
+          <Text style={styles.footer}>Farm Management System © 2026</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,334 +8,116 @@ import {
   StatusBar,
   SafeAreaView,
   Platform,
+  RefreshControl,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/navigator";
 import { getUser, logout } from "../services/AuthService";
 import User from "../models/User";
-import Farm from "../models/Farm";
 import FarmCard from "../components/Dashboard/FarmCard";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../services/ColorPalette";
 import FarmDetailed from "../models/FarmDetailed";
-
-const ASSIGNED_FARMS: FarmDetailed[] = [
-  FarmDetailed.fromJson({
-    id: "1",
-    name: "Green Valley Farm",
-    tel: "0702129283",
-    city: "Kandy",
-    address: "No. 123/A, North Lane, Maha Oya",
-    activeChicks: 15000,
-    mortalityRate: 1.2,
-    avgWeight: 430,
-    lastVisit: "Today",
-    healthStatus: "Good",
-    batchAge: 24,
-    assignedTo: {
-      id: "2",
-      name: "Roshan",
-      phone: "0782822",
-      role: "officer",
-    },
-    feedConsumed: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }),
-
-  FarmDetailed.fromJson({
-    id: "3",
-    name: "Blue Ridge Poultry",
-    tel: "0702129283",
-    city: "Gampaha",
-    address: "ABC, DEF",
-    activeChicks: 4100,
-    mortalityRate: 2.1,
-    avgWeight: 512,
-    lastVisit: "2 days ago",
-    healthStatus: "Fair",
-    batchAge: 31,
-    feedConsumed: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }),
-
-  FarmDetailed.fromJson({
-    id: "2",
-    name: "Sunrise Poultry",
-    tel: "0702129283",
-    city: "Kurunegala",
-    address: "ABC, DEF",
-    activeChicks: 3200,
-    mortalityRate: 1.5,
-    avgWeight: 395,
-    lastVisit: "Yesterday",
-    healthStatus: "Good",
-    batchAge: 19,
-    feedConsumed: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }),
-
-  FarmDetailed.fromJson({
-    id: "4",
-    name: "Maha Oya Farm",
-    tel: "0702129283",
-    city: "Maha Oya",
-    address: "ABC, DEF",
-    activeChicks: 2800,
-    mortalityRate: 0,
-    avgWeight: 178,
-    lastVisit: "3 days ago",
-    healthStatus: "Poor",
-    batchAge: 8,
-    feedConsumed: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }),
-];
-
-const PAST_VISITS = [
-  {
-    id: "v1",
-    farmName: "Green Valley Farm",
-    farmCity: "Kandy",
-    date: "Today, 9:14 AM",
-    liveChicks: 14988,
-    mortalityToday: 12,
-    avgWeight: 430,
-    feedConsumed: 210,
-    waterConsumed: 480,
-    healthStatus: "Good" as const,
-    notes: "Flock looks healthy. Feed intake normal. Water lines cleaned.",
-  },
-  {
-    id: "v2",
-    farmName: "Sunrise Poultry",
-    farmCity: "Kurunegala",
-    date: "Yesterday, 11:30 AM",
-    liveChicks: 3200,
-    mortalityToday: 5,
-    avgWeight: 390,
-    feedConsumed: 195,
-    waterConsumed: 440,
-    healthStatus: "Good" as const,
-    notes: "No issues. Slight humidity increase noted.",
-  },
-  {
-    id: "v3",
-    farmName: "Green Valley Farm",
-    farmCity: "Kandy",
-    date: "12 Jun 2026, 8:50 AM",
-    liveChicks: 15000,
-    mortalityToday: 3,
-    avgWeight: 345,
-    feedConsumed: 180,
-    waterConsumed: 400,
-    healthStatus: "Good" as const,
-    notes: "Early stage, chicks settling well.",
-  },
-  {
-    id: "v4",
-    farmName: "Blue Ridge Poultry",
-    farmCity: "Gampaha",
-    date: "10 Jun 2026, 2:10 PM",
-    liveChicks: 4110,
-    mortalityToday: 21,
-    avgWeight: 480,
-    feedConsumed: 230,
-    waterConsumed: 520,
-    healthStatus: "Fair" as const,
-    notes: "Mortality slightly elevated. Vet follow-up recommended.",
-  },
-];
-
-const STATS = {
-  totalVisits: 24,
-  visitsThisMonth: 9,
-  farms: ASSIGNED_FARMS.length,
-  visitsDueToday: 2,
-};
-
-// ── Health badge ──────────────────────────────────────────
-function HealthBadge({ status }: { status: "Good" | "Fair" | "Poor" }) {
-  const map = {
-    Good: { bg: Colors.G100, text: Colors.G900, dot: Colors.G500 },
-    Fair: { bg: Colors.AMBER100, text: Colors.AMBER800, dot: Colors.AMBER500 },
-    Poor: { bg: Colors.RED100, text: Colors.RED800, dot: Colors.RED500 },
-  };
-  const c = map[status];
-  return (
-    <View style={[hb.wrap, { backgroundColor: c.bg }]}>
-      <View style={[hb.dot, { backgroundColor: c.dot }]} />
-      <Text style={[hb.text, { color: c.text }]}>{status}</Text>
-    </View>
-  );
-}
-const hb = StyleSheet.create({
-  wrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    gap: 5,
-  },
-  dot: { width: 7, height: 7, borderRadius: 4 },
-  text: { fontSize: 12, fontWeight: "700" },
-});
-
-// ── Visit card ────────────────────────────────────────────
-function VisitCard({ visit }: { visit: (typeof PAST_VISITS)[0] }) {
-  const highMortality = visit.mortalityToday > 10;
-
-  return (
-    <TouchableOpacity style={vc.card} activeOpacity={0.75}>
-      {/* Header */}
-      <View style={vc.header}>
-        <View style={vc.farmIconWrap}>
-          <Text style={vc.farmIcon}>
-            <Ionicons name="receipt" size={25} color={Colors.G900} />
-          </Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={vc.farmName}>{visit.farmName}</Text>
-          <Text style={vc.meta}>
-            📍 {visit.farmCity} · 🕐 {visit.date}
-          </Text>
-        </View>
-        <HealthBadge status={visit.healthStatus} />
-      </View>
-
-      {/* Stats strip */}
-      <View style={vc.strip}>
-        <View style={vc.stat}>
-          <Text style={vc.statVal}>{visit.avgWeight} g</Text>
-          <Text style={vc.statLbl}>Avg Weight</Text>
-        </View>
-        <View style={vc.divider} />
-        <View style={vc.stat}>
-          <Text style={[vc.statVal, highMortality && { color: Colors.RED500 }]}>
-            {visit.mortalityToday}
-          </Text>
-          <Text style={vc.statLbl}>Mortality</Text>
-        </View>
-        <View style={vc.divider} />
-        <View style={vc.stat}>
-          <Text style={vc.statVal}>{visit.feedConsumed} kg</Text>
-          <Text style={vc.statLbl}>Feed</Text>
-        </View>
-        <View style={vc.divider} />
-        <View style={vc.stat}>
-          <Text style={vc.statVal}>{visit.waterConsumed} L</Text>
-          <Text style={vc.statLbl}>Water</Text>
-        </View>
-      </View>
-
-      {/* Notes */}
-      {visit.notes ? (
-        <View style={vc.noteRow}>
-          <Ionicons
-            name="chatbubble-ellipses-outline"
-            size={13}
-            color={Colors.SLATE500}
-          />
-          <Text style={vc.noteText} numberOfLines={1}>
-            {visit.notes}
-          </Text>
-        </View>
-      ) : null}
-    </TouchableOpacity>
-  );
-}
-
-const vc = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.WHITE,
-    borderRadius: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.SLATE200,
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-    }),
-  },
-  header: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
-  farmIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: Colors.G100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  farmIcon: { fontSize: 20 },
-  farmName: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: Colors.SLATE900,
-    marginBottom: 2,
-  },
-  meta: { fontSize: 11, color: Colors.SLATE500, fontWeight: "500" },
-  strip: {
-    flexDirection: "row",
-    backgroundColor: Colors.G50,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: Colors.G100,
-    paddingVertical: 12,
-  },
-  stat: { flex: 1, alignItems: "center" },
-  statVal: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: Colors.SLATE700,
-    marginBottom: 2,
-  },
-  statLbl: {
-    fontSize: 10,
-    color: Colors.SLATE500,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-    fontWeight: "600",
-  },
-  divider: { width: 1, backgroundColor: Colors.G100 },
-  noteRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  noteText: {
-    fontSize: 12,
-    color: Colors.SLATE500,
-    fontStyle: "italic",
-    flex: 1,
-  },
-});
+import { getFarmsAssigned } from "../controllers/farmController";
+import LoadingOverlay from "../components/Common/LoadingOverlay";
+import OfficerHomeSummery from "../models/OfficerHomeSummery";
+import { getOfficerHomeSummery } from "../controllers/statController";
+import Visit from "../models/Visit";
+import { getVisitsByOfficer } from "../controllers/visitController";
+import EmptyContainer from "../components/Common/EmptyContainer";
+import { VisitCard } from "../components/BatchScreen/VisitCard";
+import ViewVisitOverlay from "../components/Common/ViewVisitOverlay";
 
 // ── Main screen ───────────────────────────────────────────
 export default function OfficerHomeScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [user, setUser] = useState<User | null>(null);
+  const [farms, setFarms] = useState<FarmDetailed[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [summery, setSummery] = useState<OfficerHomeSummery | null>(null);
+  const [viewingVisit, setViewingVisit] = useState<Visit | null>(null);
+  const hasLoadedOnce = useRef(false);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const storedUser = await getUser();
-      setUser(storedUser);
-    };
-    loadUser();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const firstLoad = !hasLoadedOnce.current;
+
+      hasLoadedOnce.current = true;
+
+      loadData(firstLoad);
+      setViewingVisit(null);
+    }, []),
+  );
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadData(false);
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const onView = (visit: Visit) => {
+    setViewingVisit(visit);
+  };
+
+  const loadData = async (showLoading = false) => {
+    try {
+      if (showLoading) {
+        setLoading(true);
+      }
+
+      await loadUser();
+    } catch (error) {
+      console.error("Failed to load data:", error);
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const loadUser = async () => {
+    const storedUser = await getUser();
+
+    setUser(storedUser);
+
+    if (storedUser) {
+      await loadFarms(storedUser.id);
+      await loadVisits(storedUser.id);
+      await loadSummery(storedUser.id);
+    } else {
+      setFarms([]);
+    }
+  };
+
+  const loadSummery = async (userId: string) => {
+    const data = await getOfficerHomeSummery(userId);
+    if (data) {
+      setSummery(data);
+    }
+  };
+
+  const loadFarms = async (userId: string) => {
+    try {
+      const data = await getFarmsAssigned(userId);
+      setFarms(data);
+    } catch (error) {
+      console.error("Failed to load farms:", error);
+    }
+  };
+
+  const loadVisits = async (userId: string) => {
+    const data = await getVisitsByOfficer(userId);
+    setVisits(data);
+  };
 
   const initials = user?.name
     ? user.name
@@ -360,6 +142,14 @@ export default function OfficerHomeScreen() {
         style={s.scroll}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.G700}
+            colors={[Colors.G700]}
+          />
+        }
       >
         {/* ── Header ── */}
         <View style={s.header}>
@@ -388,78 +178,81 @@ export default function OfficerHomeScreen() {
             {/* Big number */}
             <View style={s.heroLeft}>
               <Text style={s.heroLabel}>TOTAL FIELD VISITS</Text>
-              <Text style={s.heroNumber}>{STATS.totalVisits}</Text>
+              <Text style={s.heroNumber}>{summery?.totalVisits}</Text>
               <View style={s.heroBadge}>
                 <View style={s.heroBadgeDot} />
-                <Text style={s.heroBadgeText}>
-                  {STATS.visitsThisMonth} this month
-                </Text>
+                <Text style={s.heroBadgeText}>All systems active</Text>
               </View>
             </View>
 
             {/* Right mini stats */}
             <View style={s.heroRight}>
               <View style={s.miniStat}>
-                <Text style={s.miniStatValue}>{STATS.farms}</Text>
+                <Text style={s.miniStatValue}>{summery?.assignedFarms}</Text>
                 <Text style={s.miniStatLabel}>Assigned Farms</Text>
               </View>
               <View style={s.miniStatDivider} />
               <View style={s.miniStat}>
                 <Text style={[s.miniStatValue, s.amberValue]}>
-                  {STATS.visitsDueToday}
+                  {summery?.activeBatches}
                 </Text>
-                <Text style={s.miniStatLabel}>Due Today</Text>
+                <Text style={s.miniStatLabel}>Active Batches</Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* ── Due Today alert strip ── */}
-        {STATS.visitsDueToday > 0 && (
-          <View style={s.alertStrip}>
-            <View style={s.alertIconWrap}>
-              <Ionicons name="alert-circle" size={18} color={Colors.AMBER600} />
-            </View>
-            <Text style={s.alertText}>
-              You have{" "}
-              <Text style={s.alertBold}>
-                {STATS.visitsDueToday} farm visits
-              </Text>{" "}
-              pending today
-            </Text>
-            <TouchableOpacity style={s.alertAction}>
-              <Text style={s.alertActionText}>View</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={{ height: 20 }}></View>
 
-        {/* ── Assigned Farms ── */}
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>Assigned Farms</Text>
 
           <View style={[s.countPill, { marginRight: 4 }]}>
-            <Text style={s.countText}>{ASSIGNED_FARMS.length} farms</Text>
+            <Text style={s.countText}>{farms.length} farms</Text>
           </View>
         </View>
 
-        {ASSIGNED_FARMS.map((farm) => (
+        {farms.map((farm) => (
           <FarmCard key={farm.id} farm={farm} />
         ))}
 
-        {/* ── Past Visits ── */}
         <View style={[s.sectionHeader, { marginTop: 10 }]}>
-          <Text style={s.sectionTitle}>Past Visits</Text>
+          <Text style={s.sectionTitle}>Your Visits</Text>
           <View style={[s.countPill, { marginRight: 4 }]}>
-            <Text style={s.countText}>{PAST_VISITS.length} visits</Text>
+            <Text style={s.countText}>{visits.length} visits</Text>
           </View>
         </View>
 
-        {PAST_VISITS.map((visit) => (
-          <VisitCard key={visit.id} visit={visit} />
-        ))}
+        {visits.length > 0 ? (
+          <View>
+            {visits.map((visit) => (
+              <VisitCard
+                key={visit.id}
+                visit={visit}
+                isLast={false}
+                refresh={() => {}}
+                onView={onView}
+              />
+            ))}
+          </View>
+        ) : (
+          <EmptyContainer
+            title="No Visits Recorded"
+            body="The visits you record will appear here"
+          />
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      <LoadingOverlay visible={loading} />
+      {viewingVisit && (
+        <ViewVisitOverlay
+          visit={viewingVisit}
+          onClose={() => {
+            setViewingVisit(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

@@ -18,6 +18,7 @@ import Batch from "../../models/Batch";
 import FeedType from "../../models/FeedType";
 import { addFeedEntry, getFeedTypes } from "../../controllers/feedController";
 import { showToast } from "../../services/Util";
+import Loader from "../Common/Loader";
 
 type Props = {
   visible: boolean;
@@ -33,6 +34,7 @@ export default function AddFeedOverlay({ visible, batch, onClose }: Props) {
   const [showFeedSheet, setShowFeedSheet] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [feedTypes, setFeedTypes] = useState<FeedType[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -63,11 +65,16 @@ export default function AddFeedOverlay({ visible, batch, onClose }: Props) {
     if (!selectedFeedType || !batch) {
       return;
     }
+
+    setLoading(true);
+
     const success = await addFeedEntry(
       selectedFeedType.id,
       parseFloat(weight),
       batch?.id,
     );
+
+    setLoading(false);
 
     if (success) {
       handleClose();
@@ -243,13 +250,16 @@ export default function AddFeedOverlay({ visible, batch, onClose }: Props) {
                 </View>
               )}
 
-            <TouchableOpacity
-              style={s.submitBtn}
-              onPress={handleSubmit}
-              activeOpacity={0.85}
-            >
-              <Text style={s.submitText}>Add Feed Entry</Text>
-            </TouchableOpacity>
+            <View style={s.submitBtn}>
+              <Loader
+                visible={loading}
+                background={Colors.G700}
+                foreground={Colors.WHITE}
+              />
+              <TouchableOpacity onPress={handleSubmit} activeOpacity={0.85}>
+                <Text style={s.submitText}>Add Feed Entry</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={{ height: 8 }} />
           </ScrollView>
@@ -565,6 +575,7 @@ const s = StyleSheet.create({
   },
 
   submitBtn: {
+    overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

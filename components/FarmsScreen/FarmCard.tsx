@@ -4,20 +4,63 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Animated,
+  Alert,
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
 import Colors from "../../services/ColorPalette";
 import Farm from "../../models/Farm";
+import Loader from "../Common/Loader";
+import { useState } from "react";
+import { closeFarm, openFarm } from "../../controllers/farmController";
 
 interface FarmCardProps {
   farm: Farm;
   onEdit: () => void;
-  onDelete: () => void;
+  onRefresh: () => void;
 }
 
-export default function FarmCard({ farm, onEdit, onDelete }: FarmCardProps) {
+export default function FarmCard({ farm, onEdit, onRefresh }: FarmCardProps) {
+  const [toggleLoading, setToggleLoading] = useState(false);
+
+  const handleToggle = () => {
+    setToggleLoading(true);
+    const isGonnaOpen = !farm.isOpen;
+    Alert.alert(
+      isGonnaOpen ? "Open Farm" : "Close Farm",
+      `Are you sure you want to ${isGonnaOpen ? "OPEN" : "CLOSE"} "${farm.name}"? This cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => {
+            setToggleLoading(false);
+          },
+        },
+        {
+          text: isGonnaOpen ? "Open" : "Close",
+          style: isGonnaOpen ? "default" : "destructive",
+          onPress: async () => {
+            if (isGonnaOpen) {
+              const success = await openFarm(farm.id);
+              if (success) {
+                onRefresh();
+              }
+            } else {
+              const success = await closeFarm(farm.id);
+              if (success) {
+                onRefresh();
+              }
+            }
+            setToggleLoading(false);
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <View style={styles.wrap}>
       <View style={styles.body}>
@@ -42,6 +85,32 @@ export default function FarmCard({ farm, onEdit, onDelete }: FarmCardProps) {
 
           <View style={styles.actions}>
             <TouchableOpacity
+              style={[
+                styles.toggle,
+                farm.isOpen ? styles.toggleOn : styles.toggleOff,
+              ]}
+              onPress={() => {
+                handleToggle();
+              }}
+              activeOpacity={0.85}
+              disabled={toggleLoading}
+            >
+              {toggleLoading ? (
+                <Loader
+                  visible
+                  foreground={farm.isOpen ? Colors.G700 : Colors.SLATE500}
+                  background="transparent"
+                />
+              ) : (
+                <Animated.View
+                  style={[
+                    styles.toggleDot,
+                    farm.isOpen ? styles.toggleDotOn : styles.toggleDotOff,
+                  ]}
+                />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.editBtn}
               onPress={onEdit}
               activeOpacity={0.8}
@@ -49,13 +118,13 @@ export default function FarmCard({ farm, onEdit, onDelete }: FarmCardProps) {
               <Ionicons name="pencil" size={15} color={Colors.G700} />
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.deleteBtn}
               onPress={onDelete}
               activeOpacity={0.8}
             >
               <Ionicons name="trash" size={18} color={Colors.RED600} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
 
@@ -204,5 +273,45 @@ const styles = StyleSheet.create({
     color: Colors.SLATE500,
     fontWeight: "500",
     flex: 1,
+  },
+
+  toggle: {
+    width: 48,
+    height: 34,
+    borderRadius: 13,
+    paddingHorizontal: 3,
+    justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+  },
+  toggleOn: {
+    backgroundColor: Colors.G100,
+    borderColor: Colors.G300,
+    alignItems: "flex-end",
+  },
+  toggleOff: {
+    backgroundColor: Colors.SLATE100,
+    borderColor: Colors.SLATE200,
+    alignItems: "flex-start",
+  },
+  toggleDot: {
+    width: 25,
+    height: 25,
+    borderRadius: 10,
+  },
+  toggleDotOn: {
+    backgroundColor: Colors.G600,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.G700,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.4,
+        shadowRadius: 3,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  toggleDotOff: {
+    backgroundColor: Colors.SLATE400,
   },
 });

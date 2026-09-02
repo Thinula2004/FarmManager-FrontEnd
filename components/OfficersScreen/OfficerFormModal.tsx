@@ -19,6 +19,7 @@ import { addOfficer, updateOfficer } from "../../controllers/officerController";
 import { getAllFarms } from "../../controllers/farmController";
 import FarmPicker from "./FarmPicker";
 import { showToast } from "../../services/Util";
+import Loader from "../Common/Loader";
 
 export type OfficerFormData = {
   id: string;
@@ -46,6 +47,7 @@ export default function OfficerFormModal({
   const [form, setForm] = useState<OfficerFormData>(initialData);
   const [farmPickerVisible, setFarmPickerVisible] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -71,6 +73,8 @@ export default function OfficerFormModal({
       return;
     }
 
+    setLoading(true);
+
     let success: boolean | undefined;
     if (mode === "edit") {
       success = await updateOfficer(
@@ -88,6 +92,7 @@ export default function OfficerFormModal({
         form.farms,
       );
     }
+    setLoading(false);
     if (success) onSave();
   };
 
@@ -240,15 +245,18 @@ export default function OfficerFormModal({
                 >
                   <Text style={m.cancelText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={m.saveBtn}
-                  onPress={handleSave}
-                  activeOpacity={0.85}
-                >
-                  <Text style={m.saveText}>
-                    {mode === "add" ? "Add Officer" : "Save Changes"}
-                  </Text>
-                </TouchableOpacity>
+                <View style={m.saveBtn}>
+                  <Loader
+                    visible={loading}
+                    background={Colors.G700}
+                    foreground={Colors.WHITE}
+                  />
+                  <TouchableOpacity onPress={handleSave} activeOpacity={0.85}>
+                    <Text style={m.saveText}>
+                      {mode === "add" ? "Add Officer" : "Save Changes"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
               <View style={{ height: 32 }} />
             </ScrollView>
@@ -417,6 +425,7 @@ const m = StyleSheet.create({
   },
   cancelText: { fontSize: 14, fontWeight: "700", color: Colors.SLATE500 },
   saveBtn: {
+    overflow: "hidden",
     flex: 2,
     paddingVertical: 14,
     borderRadius: 14,

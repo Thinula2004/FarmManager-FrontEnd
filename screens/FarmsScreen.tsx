@@ -94,28 +94,8 @@ export default function FarmsScreen() {
     loadFarms();
   };
 
-  const handleDelete = (farm: Farm) => {
-    Alert.alert(
-      "Delete Farm",
-      `Are you sure you want to delete "${farm.name}"? This cannot be undone.`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const success = await deleteFarm(farm.id);
-            if (success) {
-              loadFarms();
-            }
-          },
-        },
-      ],
-    );
+  const onRefresh = () => {
+    loadFarms();
   };
 
   return (
@@ -164,7 +144,7 @@ export default function FarmsScreen() {
 
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={17} color={Colors.SLATE500} />
+              <Ionicons name="close-circle" size={20} color={Colors.SLATE500} />
             </TouchableOpacity>
           )}
         </View>
@@ -203,7 +183,7 @@ export default function FarmsScreen() {
               key={farm.id}
               farm={farm}
               onEdit={() => openEdit(farm)}
-              onDelete={() => handleDelete(farm)}
+              onRefresh={() => onRefresh()}
             />
           ))
         )}

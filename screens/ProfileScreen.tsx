@@ -76,13 +76,13 @@ export default function ProfileScreen() {
     {
       label: "Preferences",
       items: [
-        {
-          icon: "notifications-outline",
-          iconBg: Colors.SLATE100,
-          title: "Notifications",
-          subtitle: "Manage alerts and reminders",
-          onPress: () => {},
-        },
+        // {
+        //   icon: "notifications-outline",
+        //   iconBg: Colors.SLATE100,
+        //   title: "Notifications",
+        //   subtitle: "Manage alerts and reminders",
+        //   onPress: () => {},
+        // },
         {
           icon: "lock-closed-outline",
           iconBg: Colors.SLATE100,

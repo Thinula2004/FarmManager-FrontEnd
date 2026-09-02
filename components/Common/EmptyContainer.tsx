@@ -4,11 +4,17 @@ import Colors from "../../services/ColorPalette";
 interface Props {
   title: string;
   body: string;
+  withBG?: boolean;
 }
 
-export default function EmptyContainer({ title, body }: Props) {
+export default function EmptyContainer({ title, body, withBG = false }: Props) {
   return (
-    <View style={styles.emptyContainer}>
+    <View
+      style={[
+        styles.emptyContainer,
+        withBG && { backgroundColor: Colors.WHITE },
+      ]}
+    >
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptySubtitle}>{body}</Text>
     </View>

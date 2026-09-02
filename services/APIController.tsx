@@ -22,10 +22,22 @@ export const onSessionExpired = (
   };
 };
 
+let sessionExpiredNotified = false;
+
 const notifySessionExpired = () => {
+  if (sessionExpiredNotified) {
+    return;
+  }
+
+  sessionExpiredNotified = true;
+
   sessionExpiredListeners.forEach((listener) => {
     listener();
   });
+};
+
+export const resetSessionExpiredNotification = () => {
+  sessionExpiredNotified = false;
 };
 
 export const showError = (message: string) => {
@@ -102,7 +114,10 @@ export const apiCall = async <T = any,>(
     if (error instanceof AxiosError) {
       const status = error.response?.status;
       if (status === 401 || status === 403) {
-        notifySessionExpired();
+        console.log(`${method} => ${API_URL + endpoint} => ${status}`);
+        if (authorized) {
+          notifySessionExpired();
+        }
 
         return null;
       }

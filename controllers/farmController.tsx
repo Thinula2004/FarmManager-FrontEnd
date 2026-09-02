@@ -92,3 +92,53 @@ export async function getAllFarmsDetailed(): Promise<FarmDetailed[]> {
 
   return farms;
 }
+
+export async function getFarmsAssigned(
+  officerId: string,
+): Promise<FarmDetailed[]> {
+  const response = await apiCall(
+    "GET",
+    "/farms/assigned/" + officerId,
+    undefined,
+    true,
+  );
+
+  if (!response) {
+    return [];
+  }
+
+  const data = response.data;
+  const farms = data.farms.map((farm: any) => FarmDetailed.fromJson(farm));
+
+  return farms;
+}
+
+export async function openFarm(farmId: string): Promise<boolean> {
+  const response = await apiCall(
+    "POST",
+    "/farms/open/" + farmId,
+    undefined,
+    true,
+  );
+
+  if (!response) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function closeFarm(farmId: string): Promise<boolean> {
+  const response = await apiCall(
+    "POST",
+    "/farms/close/" + farmId,
+    undefined,
+    true,
+  );
+
+  if (!response) {
+    return false;
+  }
+
+  return true;
+}

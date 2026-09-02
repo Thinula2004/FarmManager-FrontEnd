@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Colors from "../../services/ColorPalette";
 import FormField from "../Common/FormField";
 import { addFarm, updateFarm } from "../../controllers/farmController";
+import Loader from "../Common/Loader";
 
 export type FarmFormData = {
   id: string;
@@ -42,6 +43,7 @@ export default function FarmFormModal({
   onSave,
 }: FarmFormModalProps) {
   const [form, setForm] = useState<FarmFormData>(initialData);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -69,6 +71,8 @@ export default function FarmFormModal({
       return;
     }
 
+    setLoading(true);
+
     let success = undefined;
 
     if (mode == "edit") {
@@ -89,6 +93,8 @@ export default function FarmFormModal({
         form.tel,
       );
     }
+
+    setLoading(false);
 
     if (success) {
       onSave();
@@ -178,16 +184,18 @@ export default function FarmFormModal({
               >
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.saveBtn}
-                onPress={handleSave}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.saveText}>
-                  {mode === "add" ? "Add Farm" : "Save Changes"}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.saveBtn}>
+                <Loader
+                  visible={loading}
+                  background={Colors.G700}
+                  foreground={Colors.WHITE}
+                />
+                <TouchableOpacity onPress={handleSave} activeOpacity={0.85}>
+                  <Text style={styles.saveText}>
+                    {mode === "add" ? "Add Farm" : "Save Changes"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={{ height: 32 }} />
@@ -296,6 +304,7 @@ const styles = StyleSheet.create({
 
   saveBtn: {
     flex: 2,
+    overflow: "hidden",
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",

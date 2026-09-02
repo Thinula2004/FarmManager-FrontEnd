@@ -5,6 +5,7 @@ const Colors = {
   G600: "#16a34a",
   G500: "#22C55E",
   G400: "#4ade80",
+  G300: "#86efac",
   G200: "#bbf7d0",
   G100: "#DCFCE7",
   G50: "#F0FDF4",
@@ -12,7 +13,9 @@ const Colors = {
   SLATE900: "#0f172a",
   SLATE700: "#1E293B",
   SLATE500: "#64748B",
+  SLATE450: "#98a7bc",
   SLATE400: "#c3cad4",
+  SLATE300: "#ced5df",
   SLATE200: "#e2e8f0",
   SLATE100: "#f1f5f9",
 
@@ -25,6 +28,7 @@ const Colors = {
   AMBER800: "#92400e",
   AMBER600: "#d97706",
   AMBER500: "#f59e0b",
+  AMBER200: "#fde68a",
   AMBER100: "#fef3c7",
   AMBER50: "#fffbeb",
 

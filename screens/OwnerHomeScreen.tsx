@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Platform,
   RefreshControl,
+  TextInput,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -34,6 +35,7 @@ export default function OwnerHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const hasLoadedOnce = useRef(false);
+  const [search, setSearch] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -47,6 +49,8 @@ export default function OwnerHomeScreen() {
       hasLoadedOnce.current = true;
 
       loadData(firstLoad);
+
+      setSearch("");
     }, []),
   );
 
@@ -103,6 +107,15 @@ export default function OwnerHomeScreen() {
     weekday: "long",
     month: "short",
     day: "numeric",
+  });
+
+  const filtered = farms.filter((farm) => {
+    const query = search.toLowerCase();
+
+    return (
+      farm.name.toLowerCase().includes(query) ||
+      farm.city.toLowerCase().includes(query)
+    );
   });
 
   return (
@@ -180,7 +193,7 @@ export default function OwnerHomeScreen() {
           <View style={styles.sectionTitleGroup}>
             <Text style={styles.sectionTitle}>Your Farms</Text>
             <View style={styles.countPill}>
-              <Text style={styles.countText}>{farms.length} farms</Text>
+              <Text style={styles.countText}>{filtered.length} farms</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -192,7 +205,25 @@ export default function OwnerHomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {farms.map((farm) => (
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={17} color={Colors.SLATE500} />
+
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by farm name or city"
+            placeholderTextColor={Colors.SLATE500}
+            value={search}
+            onChangeText={setSearch}
+          />
+
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")}>
+              <Ionicons name="close-circle" size={20} color={Colors.SLATE500} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {filtered.map((farm) => (
           <FarmCard key={farm.id} farm={farm} />
         ))}
 
@@ -443,5 +474,25 @@ const styles = StyleSheet.create({
       },
       android: { elevation: 4 },
     }),
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: Colors.WHITE,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === "ios" ? 13 : 10,
+    borderWidth: 1.5,
+    borderColor: Colors.SLATE200,
+    marginTop: 10,
+    marginBottom: 15,
+  },
+
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.SLATE900,
+    fontWeight: "500",
   },
 });

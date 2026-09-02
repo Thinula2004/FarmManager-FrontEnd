@@ -5,20 +5,18 @@ import {
   createNavigationContainerRef,
 } from "@react-navigation/native";
 
-import OwnerHomeScreen from "../screens/OwnerHomeScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import LoginScreen from "../screens/LoginScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
-import Farm from "../models/Farm";
 import FarmScreen from "../screens/FarmScreen";
-import OfficerHomeScreen from "../screens/OfficerHomeScreen";
 import HomeScreen from "../screens/HomeScreen";
 import OfficersScreen from "../screens/OfficersScreen";
 import FarmsScreen from "../screens/FarmsScreen";
 import FarmDetailed from "../models/FarmDetailed";
 import SplashScreen from "../screens/SplashScreen";
 import BatchScreen from "../screens/BatchScreen";
+import BatchMetricsScreen from "../screens/BatchMetricsScreen";
 import Batch from "../models/Batch";
 
 export type RootStackParamList = {
@@ -29,6 +27,7 @@ export type RootStackParamList = {
   Officers: undefined;
   Farms: undefined;
   Batch: { batchId: string };
+  BatchMetrics: { batch: Batch };
   Farm: { farm: FarmDetailed };
 };
 
@@ -131,6 +130,12 @@ export default function Navigator() {
         <Stack.Screen
           name="Batch"
           component={BatchScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="BatchMetrics"
+          component={BatchMetricsScreen}
           options={{ headerShown: false }}
         />
 

@@ -9,8 +9,9 @@ import {
 import Colors from "../../services/ColorPalette";
 import { Ionicons } from "@expo/vector-icons";
 import Batch from "../../models/Batch";
-import { getDaysSince } from "../../services/Util";
+import { formatWeight, getDaysSince } from "../../services/Util";
 import { navigateFromStack } from "../../navigation/navigator";
+import User from "../../models/User";
 
 function daysAgo(rawDate: string): string {
   if (!rawDate) return "-";
@@ -69,15 +70,19 @@ function fcrColor(fcr: number): string {
 export default function BatchCard({
   batch,
   onDelete,
+  user,
+  isFirst,
 }: {
   batch: Batch;
   onDelete: (batchId: string) => {};
+  user: User | null;
+  isFirst: boolean;
 }) {
   const liveChicks = batch.initialCount - batch.totalMortality;
   const isOngoing = batch.status === "Ongoing";
   const fcrDisplay = isOngoing
-    ? `~${batch.fcr.toFixed(2)}`
-    : batch.fcr.toFixed(2);
+    ? `~${batch.fcr.toFixed(3)}`
+    : batch.fcr.toFixed(3);
 
   const status =
     STATUS_CONFIG[batch.getStatus as BatchStatus] ?? STATUS_CONFIG.Ongoing;
@@ -166,8 +171,12 @@ export default function BatchCard({
 
         {/* Avg weight */}
         <View style={c.statItem}>
-          <Text style={c.statValue}>{batch.avgWeight.toFixed(2)}</Text>
-          <Text style={c.statLabel}>Avg Wt (kg)</Text>
+          <Text style={c.statValue}>
+            {formatWeight(batch.avgWeight, false)}
+          </Text>
+          <Text style={c.statLabel}>
+            Avg Wt ({batch.avgWeight >= 1000 ? "KG" : "G"})
+          </Text>
         </View>
 
         <View style={c.statRule} />
@@ -200,16 +209,18 @@ export default function BatchCard({
             <Text style={c.lastVisitVal}>{daysAgo(batch.lastVisit)}</Text>
           </Text>
         </View>
-        <View style={{ flexDirection: "row", gap: 4 }}>
-          <TouchableOpacity
-            style={c.deleteBtn}
-            onPress={() => {
-              handleDelete();
-            }}
-          >
-            <Ionicons name="trash" size={16} color={Colors.RED600} />
-          </TouchableOpacity>
-        </View>
+        {user && user.role == "owner" && isFirst && (
+          <View style={{ flexDirection: "row", gap: 4 }}>
+            <TouchableOpacity
+              style={c.deleteBtn}
+              onPress={() => {
+                handleDelete();
+              }}
+            >
+              <Ionicons name="trash" size={16} color={Colors.RED600} />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );

@@ -16,18 +16,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "../services/ColorPalette";
 import SectionHeader from "../components/BatchScreen/SectionHeader";
 import { SupplyCategory } from "../enums/SupplyType";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Batch from "../models/Batch";
 import {
   capitalize,
   formatDate,
+  formatWeight,
   getDaysSince,
   getSupplyIcon,
   getTimeSince,
   showToast,
 } from "../services/Util";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/navigator";
+import { navigateFromStack, RootStackParamList } from "../navigation/navigator";
 import { getBatchByID } from "../controllers/batchController";
 import FeedEntry from "../models/FeedEntry";
 import Visit from "../models/Visit";
@@ -46,6 +47,10 @@ import {
   getFeedEntriesFromBatch,
 } from "../controllers/feedController";
 import AddSupplyOverlay from "../components/BatchScreen/AddSupplyOverlay";
+import User from "../models/User";
+import { getUser } from "../services/AuthService";
+import AddVisitOverlay from "../components/BatchScreen/AddVisitOverlay";
+import ViewVisitOverlay from "../components/Common/ViewVisitOverlay";
 
 const STATUS_CONFIG = {
   Ongoing: {
@@ -105,6 +110,9 @@ export default function BatchScreen({ route }: Props) {
   const [feedOverlayVisible, setFeedOverlayVisible] = useState<boolean>(false);
   const [supplyOverlayVisible, setSupplyOverlayVisible] =
     useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [addVisitOverlayVisible, setAddVisitOverlayVisible] = useState(false);
+  const [viewingVisit, setViewingVisit] = useState<Visit | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -114,6 +122,10 @@ export default function BatchScreen({ route }: Props) {
       loadData(firstLoad);
     }, []),
   );
+
+  useEffect(() => {
+    getUser().then(setUser);
+  }, []);
 
   const onRefresh = async () => {
     try {
@@ -246,9 +258,10 @@ export default function BatchScreen({ route }: Props) {
       <StatusBar barStyle="light-content" backgroundColor={Colors.G950} />
 
       <View style={s.hero}>
-        <View style={s.ringA} />
-        <View style={s.ringB} />
-
+        <View style={s.heroBackground}>
+          <View style={s.ringA} />
+          <View style={s.ringB} />
+        </View>
         <View style={s.heroNav}>
           <TouchableOpacity
             style={s.backBtn}
@@ -257,76 +270,95 @@ export default function BatchScreen({ route }: Props) {
           >
             <Ionicons name="arrow-back" size={20} color={Colors.WHITE} />
           </TouchableOpacity>
-          <View style={s.actionWrapper}>
-            <TouchableOpacity
-              style={s.actionBtn}
-              activeOpacity={0.8}
-              onPress={() => setActionsExpanded((prev) => !prev)}
-            >
-              <Text style={s.actionBtnText}>Action</Text>
+          {user && user.role == "owner" && (
+            <View style={s.actionWrapper}>
+              <TouchableOpacity
+                style={s.actionBtn}
+                activeOpacity={0.8}
+                onPress={() => setActionsExpanded((prev) => !prev)}
+              >
+                <Text style={s.actionBtnText}>Action</Text>
 
-              <Ionicons
-                name={
-                  actionsExpanded ? "caret-up-outline" : "caret-down-outline"
-                }
-                size={13}
-                color={Colors.WHITE}
-              />
-            </TouchableOpacity>
+                <Ionicons
+                  name={
+                    actionsExpanded ? "caret-up-outline" : "caret-down-outline"
+                  }
+                  size={13}
+                  color={Colors.WHITE}
+                />
+              </TouchableOpacity>
 
-            {actionsExpanded && (
-              <View style={s.actionDropdown}>
-                <TouchableOpacity
-                  style={s.actionItem}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setActionsExpanded(false);
-                    setFeedOverlayVisible(true);
-                  }}
-                >
-                  <Ionicons
-                    name="nutrition-outline"
-                    size={16}
-                    color={Colors.WHITE}
-                  />
-                  <Text style={s.actionItemText}>Add Feed</Text>
-                </TouchableOpacity>
+              {actionsExpanded && (
+                <View style={s.actionDropdown}>
+                  <TouchableOpacity
+                    style={s.actionItem}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setActionsExpanded(false);
+                      setFeedOverlayVisible(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="nutrition-outline"
+                      size={16}
+                      color={Colors.WHITE}
+                    />
+                    <Text style={s.actionItemText}>Add Feed</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={s.actionItem}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setActionsExpanded(false);
-                    setSupplyOverlayVisible(true);
-                  }}
-                >
-                  <Ionicons
-                    name="medkit-outline"
-                    size={16}
-                    color={Colors.WHITE}
-                  />
-                  <Text style={s.actionItemText}>Add Supplies</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.actionItem}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setActionsExpanded(false);
+                      setSupplyOverlayVisible(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="medkit-outline"
+                      size={16}
+                      color={Colors.WHITE}
+                    />
+                    <Text style={s.actionItemText}>Add Supplies</Text>
+                  </TouchableOpacity>
 
-                <View style={s.actionDivider} />
+                  <View style={s.actionDivider} />
 
-                <TouchableOpacity
-                  style={s.actionItem}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setActionsExpanded(false);
-                  }}
-                >
-                  <Ionicons
-                    name="document-text-outline"
-                    size={16}
-                    color={Colors.WHITE}
-                  />
-                  <Text style={s.actionItemText}>Record a Visit</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
+                  <TouchableOpacity
+                    style={s.actionItem}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setActionsExpanded(false);
+                      setAddVisitOverlayVisible(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="document-text-outline"
+                      size={16}
+                      color={Colors.WHITE}
+                    />
+                    <Text style={s.actionItemText}>Record a Visit</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+          {user && user.role == "officer" && (
+            <View>
+              <TouchableOpacity
+                style={s.actionBtn}
+                activeOpacity={0.8}
+                onPress={() => setAddVisitOverlayVisible(true)}
+              >
+                <Text style={s.actionBtnText}>Record a Visit</Text>
+                <Ionicons
+                  name={"add-circle-outline"}
+                  size={15}
+                  color={Colors.WHITE}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={s.heroBody}>
@@ -439,7 +471,9 @@ export default function BatchScreen({ route }: Props) {
                   color={Colors.AMBER600}
                 />
               </View>
-              <Text style={s.metricValue}>{batch?.avgWeight} kg</Text>
+              <Text style={s.metricValue}>
+                {formatWeight(batch?.avgWeight)}
+              </Text>
               <Text style={s.metricLabel}>Avg Weight</Text>
             </View>
 
@@ -449,11 +483,42 @@ export default function BatchScreen({ route }: Props) {
               <View style={[s.metricIconWrap, { backgroundColor: "#eff6ff" }]}>
                 <Ionicons name="analytics-outline" size={16} color="#3b82f6" />
               </View>
-              <Text style={s.metricValue}>{batch?.fcr}</Text>
+              <Text style={s.metricValue}>
+                {batch?.status.toLowerCase() == "ongoing" ? "~" : ""}{" "}
+                {batch?.fcr.toFixed(3)}
+              </Text>
               <Text style={s.metricLabel}>FCR</Text>
             </View>
           </View>
         </View>
+
+        <View style={{ height: 24 }} />
+
+        <TouchableOpacity
+          style={s.metricsBtn}
+          activeOpacity={0.85}
+          onPress={() => {
+            navigateFromStack("BatchMetrics", { batch: batch });
+          }}
+        >
+          <View style={s.metricsBtnRing} />
+          <View style={s.metricsBtnIconWrap}>
+            <Ionicons name="bar-chart-outline" size={20} color={Colors.WHITE} />
+          </View>
+          <View style={s.metricsBtnTextWrap}>
+            <Text style={s.metricsBtnTitle}>Batch Metrics</Text>
+            <Text style={s.metricsBtnSub}>
+              Charts, trends &amp; performance
+            </Text>
+          </View>
+          <View style={s.metricsBtnChevronWrap}>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color="rgba(255,255,255,0.8)"
+            />
+          </View>
+        </TouchableOpacity>
 
         <View style={{ height: 24 }} />
         <SectionHeader icon="nutrition-outline" title="Feed" />
@@ -510,21 +575,24 @@ export default function BatchScreen({ route }: Props) {
                     </View>
 
                     <Text style={s.logAmount}>{entry.weight} kg</Text>
-
-                    {canDelete ? (
-                      <TouchableOpacity
-                        style={s.supplyDeleteBtn}
-                        activeOpacity={0.7}
-                        onPress={() => handleDeleteFeed(entry.id)}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={13}
-                          color={Colors.RED600}
-                        />
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={{ width: 25 }} />
+                    {user && user.role == "owner" && (
+                      <View>
+                        {canDelete ? (
+                          <TouchableOpacity
+                            style={s.supplyDeleteBtn}
+                            activeOpacity={0.7}
+                            onPress={() => handleDeleteFeed(entry.id)}
+                          >
+                            <Ionicons
+                              name="trash-outline"
+                              size={13}
+                              color={Colors.RED600}
+                            />
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={{ width: 25 }} />
+                        )}
+                      </View>
                     )}
                   </View>
                 );
@@ -588,19 +656,21 @@ export default function BatchScreen({ route }: Props) {
                       {" " + entry.unit}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    style={s.supplyDeleteBtn}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      handleDeleteSupply(entry.id);
-                    }}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={13}
-                      color={Colors.RED600}
-                    />
-                  </TouchableOpacity>
+                  {user && user.role == "owner" && (
+                    <TouchableOpacity
+                      style={s.supplyDeleteBtn}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        handleDeleteSupply(entry.id);
+                      }}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={13}
+                        color={Colors.RED600}
+                      />
+                    </TouchableOpacity>
+                  )}
                 </View>
               );
             })}
@@ -613,13 +683,19 @@ export default function BatchScreen({ route }: Props) {
         )}
 
         <View style={{ height: 24 }} />
-        <SectionHeader icon="document-text-outline" title="Field Visits" />
+        <SectionHeader icon="newspaper-outline" title="Field Visits" />
         <View style={{ height: 5 }} />
 
         {visits.length > 0 ? (
           <View>
-            {visits.map((visit) => (
-              <VisitCard key={visit.id} visit={visit} />
+            {visits.map((visit, index) => (
+              <VisitCard
+                key={visit.id}
+                visit={visit}
+                isLast={index == 0}
+                refresh={loadData}
+                onView={setViewingVisit}
+              />
             ))}
           </View>
         ) : (
@@ -631,6 +707,7 @@ export default function BatchScreen({ route }: Props) {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+
       <LoadingOverlay visible={loading} />
       <AddFeedOverlay
         visible={feedOverlayVisible}
@@ -649,6 +726,25 @@ export default function BatchScreen({ route }: Props) {
         }}
         visible={supplyOverlayVisible}
       />
+      <AddVisitOverlay
+        visible={addVisitOverlayVisible}
+        batch={batch}
+        lastVisit={visits.length > 0 ? visits[0] : null}
+        feedEntries={feedEntries}
+        onClose={() => setAddVisitOverlayVisible(false)}
+        onSaved={() => {
+          setAddVisitOverlayVisible(false);
+          loadData();
+        }}
+      />
+      {viewingVisit && (
+        <ViewVisitOverlay
+          visit={viewingVisit}
+          onClose={() => {
+            setViewingVisit(null);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -679,6 +775,16 @@ const s = StyleSheet.create({
         shadowRadius: 14,
       },
     }),
+  },
+  heroBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: "hidden",
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
   },
   ringA: {
     position: "absolute",
@@ -1214,5 +1320,67 @@ const s = StyleSheet.create({
     backgroundColor: Colors.RED50,
     borderWidth: 1,
     borderColor: Colors.RED100,
+  },
+
+  metricsBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: Colors.G700,
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.G950,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+  metricsBtnRing: {
+    position: "absolute",
+    top: -40,
+    right: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 20,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  metricsBtnIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  metricsBtnTextWrap: {
+    flex: 1,
+  },
+  metricsBtnTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: Colors.WHITE,
+    letterSpacing: -0.2,
+  },
+  metricsBtnSub: {
+    fontSize: 11.5,
+    fontWeight: "500",
+    color: "rgba(255,255,255,0.7)",
+    marginTop: 2,
+  },
+  metricsBtnChevronWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

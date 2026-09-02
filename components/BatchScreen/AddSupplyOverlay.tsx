@@ -20,6 +20,7 @@ import {
 } from "../../controllers/supplyController";
 import SupplyType from "../../models/SupplyType";
 import { getSupplyIcon } from "../../services/Util";
+import Loader from "../Common/Loader";
 
 const UNITS = ["KG", "G", "L", "ML", "Doses"];
 
@@ -40,6 +41,7 @@ export default function AddSupplyOverlay({ visible, batch, onClose }: Props) {
   const [showUnitSheet, setShowUnitSheet] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [supplyCategories, setSupplyCategories] = useState<SupplyType[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -79,6 +81,9 @@ export default function AddSupplyOverlay({ visible, batch, onClose }: Props) {
     if (!selectedCategory || !batch || !selectedUnit) {
       return;
     }
+
+    setLoading(true);
+
     const success = await addSupplyEntry(
       name,
       selectedCategory?.id,
@@ -86,6 +91,8 @@ export default function AddSupplyOverlay({ visible, batch, onClose }: Props) {
       selectedUnit,
       batch?.id,
     );
+
+    setLoading(false);
 
     if (success) {
       handleClose();
@@ -337,13 +344,16 @@ export default function AddSupplyOverlay({ visible, batch, onClose }: Props) {
               </View>
             )}
 
-            <TouchableOpacity
-              style={s.submitBtn}
-              onPress={handleSubmit}
-              activeOpacity={0.85}
-            >
-              <Text style={s.submitText}>Add Supply</Text>
-            </TouchableOpacity>
+            <View style={s.submitBtn}>
+              <Loader
+                visible={loading}
+                background={Colors.G700}
+                foreground={Colors.WHITE}
+              />
+              <TouchableOpacity onPress={handleSubmit} activeOpacity={0.85}>
+                <Text style={s.submitText}>Add Supply</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={{ height: 8 }} />
           </ScrollView>
@@ -775,6 +785,7 @@ const s = StyleSheet.create({
 
   submitBtn: {
     flexDirection: "row",
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,

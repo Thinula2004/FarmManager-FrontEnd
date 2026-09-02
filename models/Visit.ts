@@ -1,4 +1,5 @@
 import Batch from "./Batch";
+import Farm from "./Farm";
 import FeedEntry from "./FeedEntry";
 import Model from "./Model";
 import User from "./User";

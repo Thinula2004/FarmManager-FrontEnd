@@ -5,6 +5,7 @@ export default class Officer extends Model {
   name: string;
   phone: string;
   password: string;
+  isActive: boolean;
   farms: Farm[];
 
   constructor(json?: any) {
@@ -12,6 +13,7 @@ export default class Officer extends Model {
 
     this.name = json?.name ?? "";
     this.phone = json?.phone ?? "";
+    this.isActive = json?.isActive ?? false;
     this.password = json?.password ?? "";
 
     this.farms = Array.isArray(json?.farms)

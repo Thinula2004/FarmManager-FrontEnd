@@ -7,6 +7,7 @@ import {
   StatusBar,
   Platform,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -39,6 +40,7 @@ export default function FarmScreen({ route }: Props) {
   const hasLoadedOnce = useRef(false);
   const [actionsExpanded, setActionsExpanded] = useState(false);
   const [addBatchVisible, setAddBatchVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +65,17 @@ export default function FarmScreen({ route }: Props) {
       if (showLoading) {
         setLoading(false);
       }
+    }
+  };
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadData(false);
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -202,6 +215,14 @@ export default function FarmScreen({ route }: Props) {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.G700}
+            colors={[Colors.G700]}
+          />
+        }
       >
         {/* ── Vitals strip ── */}
         <View style={styles.vitalsStrip}>
@@ -244,6 +265,8 @@ export default function FarmScreen({ route }: Props) {
                 key={batch.id}
                 batch={batch}
                 onDelete={onDeleteBatch}
+                user={user}
+                isFirst={index == 0}
               />
             ))
           ) : (

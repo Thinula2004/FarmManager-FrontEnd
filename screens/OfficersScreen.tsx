@@ -24,6 +24,7 @@ import {
   getAllOfficers,
   deleteOfficer,
 } from "../controllers/officerController";
+import Loader from "../components/Common/Loader";
 
 const EMPTY_FORM: OfficerFormData = {
   id: "",
@@ -40,6 +41,7 @@ export default function OfficersScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [formData, setFormData] = useState<OfficerFormData>(EMPTY_FORM);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const filtered = officers.filter((o) => {
     const q = search.toLowerCase();
@@ -82,24 +84,6 @@ export default function OfficersScreen() {
     loadOfficers();
   };
 
-  const handleDelete = (officer: Officer) => {
-    Alert.alert(
-      "Remove Officer",
-      `Are you sure you want to remove "${officer.name}"? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: async () => {
-            const success = await deleteOfficer(officer.id);
-            if (success) loadOfficers();
-          },
-        },
-      ],
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safe} edges={["left", "right", "bottom"]}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.G700} />
@@ -140,7 +124,7 @@ export default function OfficersScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={17} color={Colors.SLATE500} />
+              <Ionicons name="close-circle" size={20} color={Colors.SLATE500} />
             </TouchableOpacity>
           )}
         </View>
@@ -176,7 +160,9 @@ export default function OfficersScreen() {
               key={officer.id}
               officer={officer}
               onEdit={() => openEdit(officer)}
-              onDelete={() => handleDelete(officer)}
+              onDelete={() => {
+                loadOfficers();
+              }}
             />
           ))
         )}

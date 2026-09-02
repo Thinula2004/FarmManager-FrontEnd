@@ -60,3 +60,33 @@ export async function changePassword(password: string): Promise<boolean> {
 
   return true;
 }
+
+export async function activateOfficer(userId: string): Promise<boolean> {
+  const response = await apiCall(
+    "POST",
+    "/user/activate/" + userId,
+    undefined,
+    true,
+  );
+
+  if (!response) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function deactivateOfficer(userId: string): Promise<boolean> {
+  const response = await apiCall(
+    "POST",
+    "/user/deactivate/" + userId,
+    undefined,
+    true,
+  );
+
+  if (!response) {
+    return false;
+  }
+
+  return true;
+}

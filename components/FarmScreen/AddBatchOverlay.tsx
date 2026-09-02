@@ -14,16 +14,17 @@ import {
 import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../../services/ColorPalette";
-import Farm from "../../models/Farm";
 import Breed from "../../models/Breed";
 import { getAllBreeds } from "../../controllers/animalController";
 import { addBatch } from "../../controllers/batchController";
 import { showToast } from "../../services/Util";
 import DatePicker from "../Common/DatePicker";
+import FarmDetailed from "../../models/FarmDetailed";
+import Loader from "../Common/Loader";
 
 type Props = {
   visible: boolean;
-  farm: Farm;
+  farm: FarmDetailed;
   onClose: () => void;
 };
 
@@ -40,6 +41,7 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadBreeds();
@@ -73,6 +75,9 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
     if (!selectedBreed) {
       return;
     }
+
+    setLoading(true);
+
     const success = await addBatch(
       batchName,
       farm.id,
@@ -82,9 +87,11 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
       subBreed.trim(),
     );
 
+    setLoading(false);
+
     if (success) {
       showToast("success", "Batch Added Successfully");
-      onClose();
+      handleClose();
     }
   };
 
@@ -288,16 +295,21 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
               </TouchableOpacity>
             </View>
 
-            {/* ── Submit ── */}
-            <TouchableOpacity
-              style={s.submitBtn}
-              onPress={() => {
-                handleSubmit();
-              }}
-              activeOpacity={0.85}
-            >
-              <Text style={s.submitText}>Add Batch</Text>
-            </TouchableOpacity>
+            <View style={s.submitBtn}>
+              <Loader
+                visible={loading}
+                background={Colors.G700}
+                foreground={Colors.WHITE}
+              />
+              <TouchableOpacity
+                onPress={() => {
+                  handleSubmit();
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={s.submitText}>Add Batch</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={{ height: 8 }} />
           </ScrollView>
@@ -605,6 +617,7 @@ const s = StyleSheet.create({
 
   // ── Submit ─────────────────────────────────────────────────
   submitBtn: {
+    overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

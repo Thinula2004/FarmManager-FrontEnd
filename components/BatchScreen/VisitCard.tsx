@@ -4,12 +4,19 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../../services/ColorPalette";
 import Visit from "../../models/Visit";
-import { formatDate, stringToDate } from "../../services/Util";
+import {
+  formatDate,
+  formatWeight,
+  showToast,
+  stringToDate,
+} from "../../services/Util";
 import VisitStatCell from "./VisitStatCell";
+import { deleteVisit } from "../../controllers/visitController";
 
 function initials(name: string): string {
   return name
@@ -20,7 +27,17 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export function VisitCard({ visit }: { visit: Visit }) {
+export function VisitCard({
+  visit,
+  isLast,
+  refresh,
+  onView,
+}: {
+  visit: Visit;
+  isLast: boolean;
+  refresh: () => void;
+  onView: (visit: Visit) => void;
+}) {
   const fcrColor =
     visit.FCR < 1.6
       ? Colors.G700
@@ -31,6 +48,30 @@ export function VisitCard({ visit }: { visit: Visit }) {
   const mortalityColor = visit.mortality > 10 ? Colors.RED600 : Colors.SLATE900;
 
   const lowFeed = visit.remainingFeed < 50;
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Visit",
+      "Are you sure you want to delete this Visit? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const success = await deleteVisit(visit.id);
+            if (success) {
+              showToast("success", "Visit deleted successfully");
+              refresh();
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={s.card}>
@@ -55,10 +96,24 @@ export function VisitCard({ visit }: { visit: Visit }) {
           </View>
         </View>
 
+        {isLast && (
+          <TouchableOpacity
+            style={s.deleteButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              handleDelete();
+            }}
+          >
+            <Ionicons name="trash" size={18} color={Colors.RED600} />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={s.viewButton}
           activeOpacity={0.7}
-          onPress={() => {}}
+          onPress={() => {
+            onView(visit);
+          }}
         >
           <Ionicons name="eye" size={18} color={Colors.G700} />
         </TouchableOpacity>
@@ -67,7 +122,7 @@ export function VisitCard({ visit }: { visit: Visit }) {
       <View style={s.statsStrip}>
         <VisitStatCell
           label="Avg Weight"
-          value={`${visit.avgWeight.toFixed(2)} kg`}
+          value={`${formatWeight(visit.avgWeight)}`}
           valueColor={Colors.G700}
         />
         <View style={s.statDivider} />
@@ -79,7 +134,7 @@ export function VisitCard({ visit }: { visit: Visit }) {
         <View style={s.statDivider} />
         <VisitStatCell
           label="FCR"
-          value={visit.FCR.toFixed(2)}
+          value={visit.FCR.toFixed(3)}
           valueColor={fcrColor}
         />
       </View>
@@ -193,6 +248,16 @@ const s = StyleSheet.create({
     color: Colors.SLATE500,
   },
 
+  deleteButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: Colors.RED50,
+    borderWidth: 1,
+    borderColor: Colors.RED600 + "30",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   viewButton: {
     width: 38,
     height: 38,
