@@ -18,6 +18,7 @@ import SplashScreen from "../screens/SplashScreen";
 import BatchScreen from "../screens/BatchScreen";
 import BatchMetricsScreen from "../screens/BatchMetricsScreen";
 import Batch from "../models/Batch";
+import ActivityLogScreen from "../screens/ActivityLogScreen";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -26,6 +27,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Officers: undefined;
   Farms: undefined;
+  Activities: undefined;
   Batch: { batchId: string };
   BatchMetrics: { batch: Batch };
   Farm: { farm: FarmDetailed };
@@ -136,6 +138,12 @@ export default function Navigator() {
         <Stack.Screen
           name="BatchMetrics"
           component={BatchMetricsScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Activities"
+          component={ActivityLogScreen}
           options={{ headerShown: false }}
         />
 

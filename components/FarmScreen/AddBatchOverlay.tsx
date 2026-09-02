@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Platform,
   KeyboardAvoidingView,
-  StatusBar,
   Pressable,
 } from "react-native";
 import { useEffect, useState } from "react";
@@ -22,22 +21,33 @@ import DatePicker from "../Common/DatePicker";
 import FarmDetailed from "../../models/FarmDetailed";
 import Loader from "../Common/Loader";
 
+const SUB_BREEDS = [
+  "Pussalla",
+  "Cic",
+  "Biraha",
+  "Preema",
+  "Vhena",
+  "Dombaweala",
+  "Greenvali",
+  "Other",
+];
+
 type Props = {
   visible: boolean;
   farm: FarmDetailed;
   onClose: () => void;
 };
 
-// ────────────────────────────────────────────────────────────
 export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
   const today = new Date();
 
   const [batchName, setBatchName] = useState("");
   const [selectedBreed, setSelectedBreed] = useState<Breed | null>(null);
-  const [subBreed, setSubBreed] = useState("");
+  const [selectedSubBreed, setSelectedSubBreed] = useState<string | null>(null);
   const [count, setCount] = useState("");
   const [inDate, setInDate] = useState(today);
   const [showBreedSheet, setShowBreedSheet] = useState(false);
+  const [showSubBreedSheet, setShowSubBreedSheet] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
@@ -71,24 +81,17 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
   }
 
   const handleSubmit = async () => {
-    if (!validate()) return;
-    if (!selectedBreed) {
-      return;
-    }
-
+    if (!validate() || !selectedBreed) return;
     setLoading(true);
-
     const success = await addBatch(
       batchName,
       farm.id,
       inDate.toISOString().split("T")[0],
       Number(count),
-      selectedBreed?.id,
-      subBreed.trim(),
+      selectedBreed.id,
+      selectedSubBreed ?? "",
     );
-
     setLoading(false);
-
     if (success) {
       showToast("success", "Batch Added Successfully");
       handleClose();
@@ -98,11 +101,12 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
   function handleClose() {
     setBatchName("");
     setSelectedBreed(null);
-    setSubBreed("");
+    setSelectedSubBreed(null);
     setCount("");
     setInDate(today);
     setErrors({});
     setShowBreedSheet(false);
+    setShowSubBreedSheet(false);
     setDatePickerVisible(false);
     onClose();
   }
@@ -124,6 +128,7 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
         <View style={s.sheet}>
           <View style={s.dragHandle} />
 
+          {/* ── Header ── */}
           <View style={s.sheetHeader}>
             <View style={s.headerLeft}>
               <View>
@@ -146,6 +151,7 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={s.scrollContent}
           >
+            {/* Farm chip */}
             <View style={s.farmChip}>
               <View style={s.farmChipIcon}>
                 <Ionicons
@@ -160,7 +166,9 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
               </View>
             </View>
 
+            {/* ── Card 1: identity ── */}
             <View style={s.formCard}>
+              {/* Batch name */}
               <View style={[s.fieldRow, !!errors.batchName && s.fieldRowError]}>
                 <View style={[s.fieldIcon, s.fieldIconGreen]}>
                   <Ionicons
@@ -189,6 +197,7 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
                 <Text style={s.errorText}>{errors.batchName}</Text>
               )}
 
+              {/* Breed selector */}
               <TouchableOpacity
                 style={[
                   s.fieldRow,
@@ -219,7 +228,12 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
                 <Text style={s.errorText}>{errors.breed}</Text>
               )}
 
-              <View style={[s.fieldRow, s.fieldRowBorder]}>
+              {/* Sub breed selector */}
+              <TouchableOpacity
+                style={[s.fieldRow, s.fieldRowBorder]}
+                onPress={() => setShowSubBreedSheet(true)}
+                activeOpacity={0.7}
+              >
                 <View style={[s.fieldIcon, s.fieldIconSlate]}>
                   <Ionicons
                     name="git-branch-outline"
@@ -232,19 +246,23 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
                     <Text style={s.fieldLabel}>Sub breed</Text>
                     <Text style={s.optionalTag}> optional</Text>
                   </View>
-                  <TextInput
-                    style={s.fieldInput}
-                    value={subBreed}
-                    onChangeText={setSubBreed}
-                    placeholder="e.g. Broiler A-Grade"
-                    placeholderTextColor={Colors.SLATE200}
-                    returnKeyType="next"
-                  />
+                  <Text
+                    style={selectedSubBreed ? s.fieldValue : s.fieldPlaceholder}
+                  >
+                    {selectedSubBreed ?? "Select a sub breed"}
+                  </Text>
                 </View>
-              </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={Colors.SLATE500}
+                />
+              </TouchableOpacity>
             </View>
 
+            {/* ── Card 2: flock + date ── */}
             <View style={[s.formCard, { marginTop: 12 }]}>
+              {/* Chick count */}
               <View style={[s.fieldRow, !!errors.count && s.fieldRowError]}>
                 <View style={[s.fieldIcon, s.fieldIconGreen]}>
                   <Ionicons name="egg-outline" size={16} color={Colors.G700} />
@@ -269,6 +287,7 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
                 <Text style={s.errorText}>{errors.count}</Text>
               )}
 
+              {/* Date */}
               <TouchableOpacity
                 style={[s.fieldRow, s.fieldRowBorder]}
                 onPress={() => setDatePickerVisible(true)}
@@ -281,12 +300,10 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
                     color={Colors.SLATE500}
                   />
                 </View>
-
                 <View style={s.fieldBody}>
                   <Text style={s.fieldLabel}>Batch start date</Text>
                   <Text style={s.fieldValue}>{formatDate(inDate)}</Text>
                 </View>
-
                 <Ionicons
                   name="chevron-forward"
                   size={16}
@@ -295,18 +312,14 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
               </TouchableOpacity>
             </View>
 
+            {/* Submit */}
             <View style={s.submitBtn}>
               <Loader
                 visible={loading}
                 background={Colors.G700}
                 foreground={Colors.WHITE}
               />
-              <TouchableOpacity
-                onPress={() => {
-                  handleSubmit();
-                }}
-                activeOpacity={0.85}
-              >
+              <TouchableOpacity onPress={handleSubmit} activeOpacity={0.85}>
                 <Text style={s.submitText}>Add Batch</Text>
               </TouchableOpacity>
             </View>
@@ -316,6 +329,7 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
         </View>
       </KeyboardAvoidingView>
 
+      {/* ── Breed sheet ── */}
       <Modal
         visible={showBreedSheet}
         transparent
@@ -326,10 +340,10 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
           style={s.backdrop}
           onPress={() => setShowBreedSheet(false)}
         />
-        <View style={s.breedSheet}>
+        <View style={s.pickerSheet}>
           <View style={s.dragHandle} />
-          <View style={s.breedSheetHeader}>
-            <Text style={s.breedSheetTitle}>Select breed</Text>
+          <View style={s.pickerSheetHeader}>
+            <Text style={s.pickerSheetTitle}>Select breed</Text>
             <TouchableOpacity onPress={() => setShowBreedSheet(false)}>
               <Ionicons name="close" size={20} color={Colors.SLATE500} />
             </TouchableOpacity>
@@ -338,9 +352,9 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
             <TouchableOpacity
               key={breed.id}
               style={[
-                s.breedRow,
-                idx === 0 && s.breedRowFirst,
-                selectedBreed?.id === breed.id && s.breedRowSelected,
+                s.pickerRow,
+                idx === 0 && s.pickerRowFirst,
+                selectedBreed?.id === breed.id && s.pickerRowSelected,
               ]}
               onPress={() => {
                 setSelectedBreed(breed);
@@ -349,22 +363,142 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
               }}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  s.breedRowText,
-                  selectedBreed?.id === breed.id && s.breedRowTextSelected,
-                ]}
-              >
-                {breed.name}
-              </Text>
+              <View style={s.pickerRowLeft}>
+                <View
+                  style={[
+                    s.pickerRowIcon,
+                    selectedBreed?.id === breed.id && s.pickerRowIconSelected,
+                  ]}
+                >
+                  <Ionicons
+                    name="paw-outline"
+                    size={14}
+                    color={
+                      selectedBreed?.id === breed.id
+                        ? Colors.WHITE
+                        : Colors.G600
+                    }
+                  />
+                </View>
+                <Text
+                  style={[
+                    s.pickerRowText,
+                    selectedBreed?.id === breed.id && s.pickerRowTextSelected,
+                  ]}
+                >
+                  {breed.name}
+                </Text>
+              </View>
               {selectedBreed?.id === breed.id && (
                 <Ionicons name="checkmark" size={18} color={Colors.G700} />
               )}
             </TouchableOpacity>
           ))}
-          <View style={{ height: 24 }} />
+          <View style={{ height: 32 }} />
         </View>
       </Modal>
+
+      {/* ── Sub breed sheet ── */}
+      <Modal
+        visible={showSubBreedSheet}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSubBreedSheet(false)}
+      >
+        <Pressable
+          style={s.backdrop}
+          onPress={() => setShowSubBreedSheet(false)}
+        />
+        <View style={s.pickerSheet}>
+          <View style={s.dragHandle} />
+          <View style={s.pickerSheetHeader}>
+            <Text style={s.pickerSheetTitle}>Select sub breed</Text>
+            <TouchableOpacity onPress={() => setShowSubBreedSheet(false)}>
+              <Ionicons name="close" size={20} color={Colors.SLATE500} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Clear option */}
+          {selectedSubBreed && (
+            <TouchableOpacity
+              style={[s.pickerRow, s.pickerRowFirst, s.pickerRowClear]}
+              onPress={() => {
+                setSelectedSubBreed(null);
+                setShowSubBreedSheet(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={s.pickerRowLeft}>
+                <View
+                  style={[
+                    s.pickerRowIcon,
+                    {
+                      backgroundColor: Colors.RED50,
+                      borderColor: Colors.RED100,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="close-outline"
+                    size={14}
+                    color={Colors.RED600}
+                  />
+                </View>
+                <Text style={[s.pickerRowText, { color: Colors.RED600 }]}>
+                  Clear selection
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {SUB_BREEDS.map((name, idx) => (
+            <TouchableOpacity
+              key={name}
+              style={[
+                s.pickerRow,
+                idx === 0 && !selectedSubBreed && s.pickerRowFirst,
+                selectedSubBreed === name && s.pickerRowSelected,
+              ]}
+              onPress={() => {
+                setSelectedSubBreed(name);
+                setShowSubBreedSheet(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={s.pickerRowLeft}>
+                <View
+                  style={[
+                    s.pickerRowIcon,
+                    selectedSubBreed === name && s.pickerRowIconSelected,
+                  ]}
+                >
+                  <Ionicons
+                    name="git-branch-outline"
+                    size={14}
+                    color={
+                      selectedSubBreed === name ? Colors.WHITE : Colors.SLATE500
+                    }
+                  />
+                </View>
+                <Text
+                  style={[
+                    s.pickerRowText,
+                    selectedSubBreed === name && s.pickerRowTextSelected,
+                  ]}
+                >
+                  {name}
+                </Text>
+              </View>
+              {selectedSubBreed === name && (
+                <Ionicons name="checkmark" size={18} color={Colors.G700} />
+              )}
+            </TouchableOpacity>
+          ))}
+          <View style={{ height: 32 }} />
+        </View>
+      </Modal>
+
+      {/* Date picker */}
       {datePickerVisible && (
         <DatePicker
           date={inDate}
@@ -376,18 +510,13 @@ export default function AddBatchOverlay({ visible, farm, onClose }: Props) {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  kav: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
+  kav: { flex: 1, justifyContent: "flex-end" },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(15,23,42,0.5)",
   },
 
-  // ── Sheet ──────────────────────────────────────────────────
   sheet: {
     backgroundColor: Colors.G50,
     borderTopLeftRadius: 28,
@@ -412,12 +541,8 @@ const s = StyleSheet.create({
     marginTop: 10,
     marginBottom: 2,
   },
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 16,
-  },
+  scrollContent: { paddingHorizontal: 18, paddingBottom: 16 },
 
-  // ── Sheet header ───────────────────────────────────────────
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -425,19 +550,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  headerIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: Colors.G700,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   headerTitle: {
     fontSize: 18,
     fontWeight: "800",
@@ -459,7 +572,6 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ── Farm chip ──────────────────────────────────────────────
   farmChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -494,7 +606,6 @@ const s = StyleSheet.create({
     marginTop: 1,
   },
 
-  // ── Form card ──────────────────────────────────────────────
   formCard: {
     backgroundColor: Colors.WHITE,
     borderRadius: 20,
@@ -512,7 +623,6 @@ const s = StyleSheet.create({
     }),
   },
 
-  // ── Field row ──────────────────────────────────────────────
   fieldRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -520,13 +630,8 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
   },
-  fieldRowBorder: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.SLATE100,
-  },
-  fieldRowError: {
-    backgroundColor: "#fff8f8",
-  },
+  fieldRowBorder: { borderTopWidth: 1, borderTopColor: Colors.SLATE100 },
+  fieldRowError: { backgroundColor: "#fff8f8" },
   fieldIcon: {
     width: 36,
     height: 36,
@@ -545,14 +650,8 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.SLATE200,
   },
-  fieldBody: {
-    flex: 1,
-    gap: 3,
-  },
-  fieldLabelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  fieldBody: { flex: 1, gap: 3 },
+  fieldLabelRow: { flexDirection: "row", alignItems: "center" },
   fieldLabel: {
     fontSize: 10,
     fontWeight: "700",
@@ -574,18 +673,9 @@ const s = StyleSheet.create({
     padding: 0,
     margin: 0,
   },
-  fieldValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.SLATE900,
-  },
-  fieldPlaceholder: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: Colors.SLATE200,
-  },
+  fieldValue: { fontSize: 14, fontWeight: "600", color: Colors.SLATE900 },
+  fieldPlaceholder: { fontSize: 14, fontWeight: "500", color: Colors.SLATE200 },
 
-  // ── Validation error ───────────────────────────────────────
   errorText: {
     fontSize: 11,
     fontWeight: "600",
@@ -595,27 +685,6 @@ const s = StyleSheet.create({
     marginTop: -4,
   },
 
-  // ── Inline date picker ─────────────────────────────────────
-  inlineDatePicker: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.SLATE100,
-    paddingBottom: 8,
-    alignItems: "center",
-  },
-  dateConfirmBtn: {
-    backgroundColor: Colors.G100,
-    borderRadius: 12,
-    paddingHorizontal: 28,
-    paddingVertical: 9,
-    marginTop: 4,
-  },
-  dateConfirmText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.G700,
-  },
-
-  // ── Submit ─────────────────────────────────────────────────
   submitBtn: {
     overflow: "hidden",
     flexDirection: "row",
@@ -643,8 +712,8 @@ const s = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
-  // ── Breed picker sheet ─────────────────────────────────────
-  breedSheet: {
+  // ── Shared picker sheet ───────────────────────────────────
+  pickerSheet: {
     position: "absolute",
     bottom: 0,
     left: 0,
@@ -662,7 +731,7 @@ const s = StyleSheet.create({
       android: { elevation: 16 },
     }),
   },
-  breedSheetHeader: {
+  pickerSheetHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -671,34 +740,44 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.SLATE100,
   },
-  breedSheetTitle: {
+  pickerSheetTitle: {
     fontSize: 16,
     fontWeight: "800",
     color: Colors.SLATE900,
     letterSpacing: -0.3,
   },
-  breedRow: {
+
+  pickerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderTopWidth: 1,
     borderTopColor: Colors.SLATE100,
   },
-  breedRowFirst: {
+  pickerRowFirst: { borderTopWidth: 0 },
+  pickerRowSelected: { backgroundColor: Colors.G50 },
+  pickerRowClear: {
     borderTopWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.SLATE100,
   },
-  breedRowSelected: {
-    backgroundColor: Colors.G50,
+  pickerRowLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  pickerRowIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: Colors.G100,
+    borderWidth: 1,
+    borderColor: Colors.G200,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  breedRowText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.SLATE700,
+  pickerRowIconSelected: {
+    backgroundColor: Colors.G700,
+    borderColor: Colors.G700,
   },
-  breedRowTextSelected: {
-    fontWeight: "800",
-    color: Colors.G700,
-  },
+  pickerRowText: { fontSize: 15, fontWeight: "600", color: Colors.SLATE700 },
+  pickerRowTextSelected: { fontWeight: "800", color: Colors.G700 },
 });

@@ -6,22 +6,14 @@ export default class User extends Modal {
   role: "owner" | "officer";
 
   constructor(json?: any) {
-    super();
+    super(json);
 
-    this.name = "";
-    this.phone = "";
-    this.role = "officer";
-
-    if (json) {
-      this.fromJson(json);
-    }
+    this.name = json?.name ?? "";
+    this.phone = json?.phone ?? "";
+    this.role = json?.role ?? "officer";
   }
 
   static fromJson(json: any): User {
-    const user = new User();
-
-    user.fromJson(json);
-
-    return user;
+    return new User(json);
   }
 }

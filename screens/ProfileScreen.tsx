@@ -130,6 +130,9 @@ export default function ProfileScreen() {
           iconBg: Colors.G50,
           title: "Activity Log",
           subtitle: "Recent visits and changes",
+          onPress: () => {
+            navigateFromStack("Activities");
+          },
         },
       ],
     });
@@ -144,11 +147,9 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Hero header ── */}
         <View style={styles.hero}>
           <View style={styles.ring1} />
           <View style={styles.ring2} />
-          {/* Back button */}
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => navigation.goBack()}
