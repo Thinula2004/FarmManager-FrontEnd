@@ -160,7 +160,7 @@ export default function SplashScreen() {
       </Animated.Text>
 
       <Animated.Text style={[s.subtitle, { opacity: subtitleOpacity }]}>
-        Girandurukotte
+        Mahiyanganaya
       </Animated.Text>
 
       <Animated.View style={[s.dotsRow, { opacity: dotsOpacity }]}>

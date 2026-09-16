@@ -11,8 +11,11 @@ export default class Batch extends Model {
   status: string;
   breed: Breed;
   totalMortality: number;
+  liveChicks: number;
   avgWeight: number;
   fcr: number;
+  totalWeight: number | null;
+  totalChilloutWeight: number;
   feedRemaining: number;
   lastVisit: string;
   farm: Farm
@@ -27,10 +30,13 @@ export default class Batch extends Model {
     this.totalCost = json?.totalCost ?? "";
     this.status = json?.status ?? "";
     this.totalMortality = json?.totalMortality ?? 0;
+    this.liveChicks = json?.liveChicks ?? 0;
     this.avgWeight = json?.avgWeight ?? 0;
     this.fcr = json?.fcr ?? 0;
     this.feedRemaining = json?.feedRemaining ?? 0;
     this.lastVisit = json?.lastVisit ?? "";
+    this.totalWeight = json?.totalWeight ?? null;
+    this.totalChilloutWeight =  json?.totalChilloutWeight ?? 0;
 
 
     this.farm = json?.farm 
@@ -46,21 +52,14 @@ export default class Batch extends Model {
     return new Batch(json);
   }
 
-  get getStatus(): "Ongoing" | "Partially Sold" | "Completed"{
+  get getStatus(): "Ongoing" | "Completed"{
     switch (this.status) {
       case "ONGOING":
         return "Ongoing";
 
-      case "PARTIALLY_SOLD":
-        return "Partially Sold";
-
       default:
         return "Completed";
     }
-  }
-
-  get liveChicks(): number{
-    return this.initialCount - this.totalMortality;
   }
 
   get mortalityPct(): number {

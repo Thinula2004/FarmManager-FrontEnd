@@ -69,7 +69,7 @@ export default function LoginScreen() {
           </View>
 
           <Text style={styles.title}>Uva Farm</Text>
-          <Text style={styles.subtitle}>Girandurukotte</Text>
+          <Text style={styles.subtitle}>Mahiyanganaya</Text>
 
           <View style={styles.divider} />
 

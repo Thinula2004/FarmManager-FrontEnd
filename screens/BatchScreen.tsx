@@ -26,6 +26,7 @@ import {
   getSupplyIcon,
   getTimeSince,
   showToast,
+  stringToDate,
 } from "../services/Util";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { navigateFromStack, RootStackParamList } from "../navigation/navigator";
@@ -51,6 +52,10 @@ import User from "../models/User";
 import { getUser } from "../services/AuthService";
 import AddVisitOverlay from "../components/BatchScreen/AddVisitOverlay";
 import ViewVisitOverlay from "../components/Common/ViewVisitOverlay";
+import Chillout from "../models/Chillout";
+import { getChilloutsFromBatch } from "../controllers/chilloutController";
+import ChilloutCard from "../components/BatchScreen/ChilloutCard";
+import AddChilloutOverlay from "../components/BatchScreen/AddChilloutOverlay";
 
 const STATUS_CONFIG = {
   Ongoing: {
@@ -59,16 +64,10 @@ const STATUS_CONFIG = {
     dot: Colors.G500,
     label: "Ongoing",
   },
-  "Partially Sold": {
+  Completed: {
     bg: Colors.AMBER100,
     text: Colors.AMBER600,
     dot: Colors.AMBER500,
-    label: "Partially Sold",
-  },
-  Completed: {
-    bg: "#ede9fe",
-    text: "#7c3aed",
-    dot: "#a78bfa",
     label: "Completed",
   },
 };
@@ -103,6 +102,7 @@ export default function BatchScreen({ route }: Props) {
   const [feedEntries, setFeedEntries] = useState<FeedEntry[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [suppliEntries, setSupplyEntries] = useState<SupplyEntry[]>([]);
+  const [chillouts, setChillouts] = useState<Chillout[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionsExpanded, setActionsExpanded] = useState(false);
@@ -112,6 +112,8 @@ export default function BatchScreen({ route }: Props) {
     useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [addVisitOverlayVisible, setAddVisitOverlayVisible] = useState(false);
+  const [addChilloutOverlayVisible, setAddChilloutOverlayVisible] =
+    useState(false);
   const [viewingVisit, setViewingVisit] = useState<Visit | null>(null);
 
   useFocusEffect(
@@ -149,6 +151,7 @@ export default function BatchScreen({ route }: Props) {
         loadFeedEntries(),
         loadSupplies(),
         loadVisits(),
+        loadChillouts(),
       ]);
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -179,6 +182,18 @@ export default function BatchScreen({ route }: Props) {
   const loadSupplies = async () => {
     const data = await getSupplyEntriesFromBatch(batchId);
     setSupplyEntries(data);
+  };
+
+  const loadChillouts = async () => {
+    const data = await getChilloutsFromBatch(batchId);
+    setChillouts(data);
+  };
+
+  const getChilloutCount = () => {
+    return chillouts.reduce(
+      (total, chillout) => total + (chillout.count ?? 0),
+      0,
+    );
   };
 
   const handleDeleteSupply = async (entryId: string) => {
@@ -270,7 +285,7 @@ export default function BatchScreen({ route }: Props) {
           >
             <Ionicons name="arrow-back" size={20} color={Colors.WHITE} />
           </TouchableOpacity>
-          {user && user.role == "owner" && (
+          {batch?.status != "COMPLETED" && user && user.role == "owner" && (
             <View style={s.actionWrapper}>
               <TouchableOpacity
                 style={s.actionBtn}
@@ -339,11 +354,27 @@ export default function BatchScreen({ route }: Props) {
                     />
                     <Text style={s.actionItemText}>Record a Visit</Text>
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={s.actionItem}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setActionsExpanded(false);
+                      setAddChilloutOverlayVisible(true);
+                    }}
+                  >
+                    <Ionicons
+                      name="cart-outline"
+                      size={16}
+                      color={Colors.WHITE}
+                    />
+                    <Text style={s.actionItemText}>Chillout</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
           )}
-          {user && user.role == "officer" && (
+          {batch?.status != "COMPLETED" && user && user.role == "officer" && (
             <View>
               <TouchableOpacity
                 style={s.actionBtn}
@@ -379,9 +410,9 @@ export default function BatchScreen({ route }: Props) {
               <Ionicons name="leaf-outline" size={12} color={Colors.G400} />
               <Text style={s.heroMetaText}>{batch?.breed.name}</Text>
               <View style={s.heroDot} />
-              <Ionicons name="time-outline" size={12} color={Colors.G400} />
+              <Ionicons name="calendar-outline" size={12} color={Colors.G400} />
               <Text style={s.heroMetaText}>
-                {getTimeSince(batch?.lastVisit)}
+                {formatDate(stringToDate(batch?.inDate), "-")}
               </Text>
             </View>
           </View>
@@ -419,7 +450,9 @@ export default function BatchScreen({ route }: Props) {
             </View>
             <View>
               <Text style={s.breedName}>{batch?.breed.name}</Text>
-              <Text style={s.breedSub}>{batch?.subBreed}</Text>
+              <Text style={s.breedSub}>
+                {batch && batch.subBreed ? batch.subBreed : "-"}
+              </Text>
             </View>
           </View>
 
@@ -427,35 +460,79 @@ export default function BatchScreen({ route }: Props) {
 
           <View style={s.equationWrap}>
             <Text style={s.equationEyebrow}>FLOCK EQUATION</Text>
-            <View style={s.equationRow}>
-              <View style={s.eqBlock}>
-                <Text style={s.eqValue}>
-                  {batch?.initialCount.toLocaleString()}
-                </Text>
-                <Text style={s.eqLabel}>Initial</Text>
-              </View>
 
-              <Text style={s.eqOperator}>−</Text>
-              <View style={s.eqBlock}>
-                <Text style={[s.eqValue, s.eqRed]}>
-                  {batch?.totalMortality.toLocaleString()}
-                </Text>
-                <Text style={s.eqLabel}>
-                  Deaths <Text style={s.eqPct}>({batch?.mortalityPct}%)</Text>
-                </Text>
-              </View>
+            {chillouts.length > 0 ? (
+              <>
+                <View style={[s.equationRow, { marginTop: 10 }]}>
+                  <View style={s.eqBlock}>
+                    <Text style={s.eqValue}>
+                      {batch?.initialCount.toLocaleString()}
+                    </Text>
+                    <Text style={s.eqLabel}>Initial</Text>
+                  </View>
 
-              <Text style={s.eqOperator}>=</Text>
+                  <Text style={s.eqOperator}>−</Text>
 
-              <View style={[s.eqBlock]}>
-                <Text style={[s.eqValue, s.eqGreen]}>
-                  {batch?.liveChicks.toLocaleString()}
-                </Text>
-                <Text style={s.eqLabel}>
-                  Live <Text style={s.eqPct}>({batch?.livePct}%)</Text>
-                </Text>
+                  <View style={s.eqBlock}>
+                    <Text style={[s.eqValue, s.eqRed]}>
+                      {batch?.totalMortality.toLocaleString()}
+                    </Text>
+                    <Text style={s.eqLabel}>Deaths</Text>
+                    <Text style={s.eqPct}>({batch?.mortalityPct}%)</Text>
+                  </View>
+
+                  <Text style={s.eqOperator}>−</Text>
+
+                  <View style={s.eqBlock}>
+                    <Text style={[s.eqValue, s.eqAmber]}>
+                      {getChilloutCount().toLocaleString()}
+                    </Text>
+                    <Text style={s.eqLabel}>Sold</Text>
+                  </View>
+
+                  <Text style={s.eqOperator}>=</Text>
+
+                  <View style={s.eqBlock}>
+                    <Text style={[s.eqValue, s.eqGreen]}>
+                      {batch?.liveChicks}
+                    </Text>
+                    <Text style={s.eqLabel}>Live</Text>
+                    <Text style={s.eqPct}>({batch?.livePct}%)</Text>
+                  </View>
+                </View>
+              </>
+            ) : (
+              <View style={s.equationRow}>
+                <View style={s.eqBlock}>
+                  <Text style={s.eqValue}>
+                    {batch?.initialCount.toLocaleString()}
+                  </Text>
+                  <Text style={s.eqLabel}>Initial</Text>
+                </View>
+
+                <Text style={s.eqOperator}>−</Text>
+
+                <View style={s.eqBlock}>
+                  <Text style={[s.eqValue, s.eqRed]}>
+                    {batch?.totalMortality.toLocaleString()}
+                  </Text>
+                  <Text style={s.eqLabel}>
+                    Deaths <Text style={s.eqPct}>({batch?.mortalityPct}%)</Text>
+                  </Text>
+                </View>
+
+                <Text style={s.eqOperator}>=</Text>
+
+                <View style={s.eqBlock}>
+                  <Text style={[s.eqValue, s.eqGreen]}>
+                    {batch?.liveChicks.toLocaleString()}
+                  </Text>
+                  <Text style={s.eqLabel}>
+                    Live <Text style={s.eqPct}>({batch?.livePct}%)</Text>
+                  </Text>
+                </View>
               </View>
-            </View>
+            )}
           </View>
 
           <View style={s.cardDivider} />
@@ -471,10 +548,19 @@ export default function BatchScreen({ route }: Props) {
                   color={Colors.AMBER600}
                 />
               </View>
-              <Text style={s.metricValue}>
-                {formatWeight(batch?.avgWeight)}
-              </Text>
-              <Text style={s.metricLabel}>Avg Weight</Text>
+              {batch?.status != "COMPLETED" ? (
+                <View style={{ alignItems: "center" }}>
+                  <Text style={s.metricValue}>
+                    {formatWeight(batch?.avgWeight)}
+                  </Text>
+                  <Text style={s.metricLabel}>Avg Weight</Text>
+                </View>
+              ) : (
+                <View style={{ alignItems: "center" }}>
+                  <Text style={s.metricValue}>{batch?.totalWeight} KG</Text>
+                  <Text style={s.metricLabel}>Total Weight</Text>
+                </View>
+              )}
             </View>
 
             <View style={s.metricDivider} />
@@ -519,6 +605,28 @@ export default function BatchScreen({ route }: Props) {
             />
           </View>
         </TouchableOpacity>
+
+        {chillouts.length > 0 && (
+          <>
+            <View style={{ height: 24 }} />
+            <SectionHeader icon="cart-outline" title="Chillouts" />
+            <View style={{ height: 5 }} />
+            <View style={{ height: 5 }} />
+            {chillouts.map((chillout) => (
+              <ChilloutCard
+                key={chillout.id}
+                chillout={chillout}
+                canDelete={
+                  user?.role == "owner" &&
+                  (chillout.isFinal || batch?.status != "COMPLETED")
+                }
+                onDelete={() => {
+                  loadData();
+                }}
+              />
+            ))}
+          </>
+        )}
 
         <View style={{ height: 24 }} />
         <SectionHeader icon="nutrition-outline" title="Feed" />
@@ -575,25 +683,27 @@ export default function BatchScreen({ route }: Props) {
                     </View>
 
                     <Text style={s.logAmount}>{entry.weight} kg</Text>
-                    {user && user.role == "owner" && (
-                      <View>
-                        {canDelete ? (
-                          <TouchableOpacity
-                            style={s.supplyDeleteBtn}
-                            activeOpacity={0.7}
-                            onPress={() => handleDeleteFeed(entry.id)}
-                          >
-                            <Ionicons
-                              name="trash-outline"
-                              size={13}
-                              color={Colors.RED600}
-                            />
-                          </TouchableOpacity>
-                        ) : (
-                          <View style={{ width: 25 }} />
-                        )}
-                      </View>
-                    )}
+                    {user &&
+                      user.role == "owner" &&
+                      batch?.status != "COMPLETED" && (
+                        <View>
+                          {canDelete ? (
+                            <TouchableOpacity
+                              style={s.supplyDeleteBtn}
+                              activeOpacity={0.7}
+                              onPress={() => handleDeleteFeed(entry.id)}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={13}
+                                color={Colors.RED600}
+                              />
+                            </TouchableOpacity>
+                          ) : (
+                            <View style={{ width: 25 }} />
+                          )}
+                        </View>
+                      )}
                   </View>
                 );
               })}
@@ -656,21 +766,23 @@ export default function BatchScreen({ route }: Props) {
                       {" " + entry.unit}
                     </Text>
                   </View>
-                  {user && user.role == "owner" && (
-                    <TouchableOpacity
-                      style={s.supplyDeleteBtn}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        handleDeleteSupply(entry.id);
-                      }}
-                    >
-                      <Ionicons
-                        name="trash-outline"
-                        size={13}
-                        color={Colors.RED600}
-                      />
-                    </TouchableOpacity>
-                  )}
+                  {user &&
+                    user.role == "owner" &&
+                    batch?.status != "COMPLETED" && (
+                      <TouchableOpacity
+                        style={s.supplyDeleteBtn}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          handleDeleteSupply(entry.id);
+                        }}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={13}
+                          color={Colors.RED600}
+                        />
+                      </TouchableOpacity>
+                    )}
                 </View>
               );
             })}
@@ -692,7 +804,7 @@ export default function BatchScreen({ route }: Props) {
               <VisitCard
                 key={visit.id}
                 visit={visit}
-                isLast={index == 0}
+                isLast={index == 0 && batch?.status != "COMPLETED"}
                 refresh={loadData}
                 onView={setViewingVisit}
               />
@@ -734,6 +846,14 @@ export default function BatchScreen({ route }: Props) {
         onClose={() => setAddVisitOverlayVisible(false)}
         onSaved={() => {
           setAddVisitOverlayVisible(false);
+          loadData();
+        }}
+      />
+      <AddChilloutOverlay
+        visible={addChilloutOverlayVisible}
+        batch={batch}
+        onClose={() => {
+          setAddChilloutOverlayVisible(false);
           loadData();
         }}
       />
@@ -1088,15 +1208,51 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   eqPct: {
+    fontSize: 10,
     color: Colors.SLATE500,
     fontWeight: "500",
   },
   eqOperator: {
-    fontSize: 26,
+    fontSize: 16,
     fontWeight: "300",
     color: Colors.SLATE500,
     marginHorizontal: 2,
     lineHeight: 32,
+  },
+  eqAmber: {
+    color: Colors.AMBER600,
+  },
+
+  chilloutBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 14,
+    backgroundColor: Colors.AMBER50,
+    borderWidth: 1,
+    borderColor: Colors.AMBER100,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  chilloutBannerIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: Colors.AMBER100,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  chilloutBannerText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: Colors.AMBER800,
+    flex: 1,
+  },
+  chilloutBannerBold: {
+    fontWeight: "800",
+    color: Colors.AMBER600,
   },
 
   metricsRow: {

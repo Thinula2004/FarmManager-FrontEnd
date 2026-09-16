@@ -110,7 +110,7 @@ export default function AddVisitOverlay({
     const entered = parseFloat(mortality) || 0;
     const previous = batch?.totalMortality ?? 0;
     return previous + entered;
-  }, [mortality, lastVisit]);
+  }, [mortality, batch]);
 
   const totalMortalityPct = useMemo(() => {
     const initial = batch?.initialCount ?? 1;
@@ -133,34 +133,25 @@ export default function AddVisitOverlay({
       return 0;
     }
 
-    const liveChicks = batch.initialCount - totalMortality;
-
-    if (liveChicks <= 0) {
-      return 0;
-    }
+    const liveChicks = Math.max(
+      (batch.liveChicks ?? 0) - parseFloat(mortality || "0"),
+      0,
+    );
 
     const totalLiveWeight = avgWeightKg * liveChicks;
 
-    if (totalLiveWeight <= 0) {
+    const totalChilloutWeight = batch.totalChilloutWeight ?? 0;
+
+    const totalWeightProduced = totalLiveWeight + totalChilloutWeight;
+
+    if (totalWeightProduced <= 0) {
       return 0;
     }
 
-    const val = feedConsumed() / totalLiveWeight;
-    // console.log(
-    //   "Initial Count " +
-    //     batch.initialCount +
-    //     " total mortality " +
-    //     totalMortality +
-    //     " live chicks " +
-    //     liveChicks +
-    //     "",
-    // );
-    // console.log(
-    //   "Feed consumed " + feedConsumed() + " Weight " + totalLiveWeight,
-    //   "",
-    // );
+    const val = feedConsumed() / totalWeightProduced;
+
     return val;
-  }, [feedRemaining, testCount, totalWeight, batch, totalMortality]);
+  }, [feedRemaining, testCount, totalWeight, mortality, batch]);
 
   function validate(): boolean {
     const e: Record<string, string> = {};
@@ -312,25 +303,6 @@ export default function AddVisitOverlay({
               <View style={s.card}>
                 <View style={s.equationBlock}>
                   <View style={s.eqCell}>
-                    <Text style={s.eqCellLabel}>Chick Count</Text>
-                    <View style={s.eqInputWrap}>
-                      <TextInput
-                        style={s.eqInput}
-                        value={testCount}
-                        onChangeText={(v) => {
-                          setTestCount(v);
-                          if (errors.testCount)
-                            setErrors((e) => ({ ...e, testCount: "" }));
-                        }}
-                        keyboardType="number-pad"
-                        selectTextOnFocus
-                      />
-                    </View>
-                  </View>
-
-                  <Text style={s.eqOperator}>÷</Text>
-
-                  <View style={s.eqCell}>
                     <Text style={s.eqCellLabel}>Total wt (g)</Text>
                     <View style={s.eqInputWrap}>
                       <TextInput
@@ -342,6 +314,24 @@ export default function AddVisitOverlay({
                             setErrors((e) => ({ ...e, totalWeight: "" }));
                         }}
                         keyboardType="decimal-pad"
+                        selectTextOnFocus
+                      />
+                    </View>
+                  </View>
+
+                  <Text style={s.eqOperator}>÷</Text>
+                  <View style={s.eqCell}>
+                    <Text style={s.eqCellLabel}>Chick Count</Text>
+                    <View style={s.eqInputWrap}>
+                      <TextInput
+                        style={s.eqInput}
+                        value={testCount}
+                        onChangeText={(v) => {
+                          setTestCount(v);
+                          if (errors.testCount)
+                            setErrors((e) => ({ ...e, testCount: "" }));
+                        }}
+                        keyboardType="number-pad"
                         selectTextOnFocus
                       />
                     </View>

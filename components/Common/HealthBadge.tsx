@@ -29,5 +29,5 @@ const badge = StyleSheet.create({
     gap: 5,
   },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  text: { fontSize: 12, fontWeight: "700" },
+  text: { fontSize: 12, fontWeight: "700", textAlign: "center" },
 });

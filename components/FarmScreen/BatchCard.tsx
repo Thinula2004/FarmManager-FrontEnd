@@ -22,7 +22,7 @@ function daysAgo(rawDate: string): string {
   return `${d} days ago`;
 }
 
-type BatchStatus = "Ongoing" | "Partially Sold" | "Completed";
+type BatchStatus = "Ongoing" | "Completed";
 
 const STATUS_CONFIG: Record<
   BatchStatus,
@@ -43,21 +43,13 @@ const STATUS_CONFIG: Record<
     circleText: Colors.G700,
     circleBorder: Colors.G700,
   },
-  "Partially Sold": {
+  Completed: {
     bg: Colors.AMBER100,
     text: Colors.AMBER600,
     dot: Colors.AMBER500,
     circleBg: Colors.AMBER50,
     circleText: Colors.AMBER600,
     circleBorder: Colors.AMBER600,
-  },
-  Completed: {
-    bg: "#ede9fe",
-    text: "#7c3aed",
-    dot: "#a78bfa",
-    circleBg: "#f5f3ff",
-    circleText: "#7c3aed",
-    circleBorder: "#7c3aed",
   },
 };
 
@@ -78,7 +70,6 @@ export default function BatchCard({
   user: User | null;
   isFirst: boolean;
 }) {
-  const liveChicks = batch.initialCount - batch.totalMortality;
   const isOngoing = batch.status === "Ongoing";
   const fcrDisplay = isOngoing
     ? `~${batch.fcr.toFixed(3)}`
@@ -114,13 +105,10 @@ export default function BatchCard({
       onPress={() => navigateFromStack("Batch", { batchId: batch.id })}
       activeOpacity={0.78}
     >
-      {/* ── Header ── */}
       <View style={c.header}>
         <View style={c.headerLeft}>
-          {/* Batch name */}
           <Text style={c.name}>{batch.name}</Text>
 
-          {/* Breed row */}
           <View style={c.breedRow}>
             <Ionicons name="paw-outline" size={13} color={Colors.SLATE500} />
             <Text style={c.breed}>
@@ -131,7 +119,6 @@ export default function BatchCard({
             </Text>
           </View>
 
-          {/* Status pill */}
           <View style={[c.statusPill, { backgroundColor: status.bg }]}>
             <View style={[c.statusDot, { backgroundColor: status.dot }]} />
             <Text style={[c.statusText, { color: status.text }]}>
@@ -140,7 +127,6 @@ export default function BatchCard({
           </View>
         </View>
 
-        {/* Age circle */}
         <View
           style={[
             c.ageCircle,
@@ -157,19 +143,16 @@ export default function BatchCard({
         </View>
       </View>
 
-      {/* ── Stats strip ── */}
       <View style={c.statsStrip}>
-        {/* Live chicks */}
         <View style={c.statItem}>
           <Text style={[c.statValue, { color: Colors.G700 }]}>
-            {liveChicks.toLocaleString()}
+            {batch.liveChicks.toLocaleString()}
           </Text>
           <Text style={c.statLabel}>Live Chicks</Text>
         </View>
 
         <View style={c.statRule} />
 
-        {/* Avg weight */}
         <View style={c.statItem}>
           <Text style={c.statValue}>
             {formatWeight(batch.avgWeight, false)}
@@ -181,7 +164,6 @@ export default function BatchCard({
 
         <View style={c.statRule} />
 
-        {/* Mortality */}
         <View style={c.statItem}>
           <Text style={[c.statValue, { color: Colors.RED600 }]}>
             {batch.totalMortality.toLocaleString()}
@@ -191,7 +173,6 @@ export default function BatchCard({
 
         <View style={c.statRule} />
 
-        {/* FCR */}
         <View style={c.statItem}>
           <Text style={[c.statValue, { color: fcrColor(batch.fcr) }]}>
             {fcrDisplay}
@@ -200,7 +181,6 @@ export default function BatchCard({
         </View>
       </View>
 
-      {/* ── Footer ── */}
       <View style={c.footer}>
         <View style={c.lastVisitRow}>
           <Ionicons name="time-outline" size={13} color={Colors.SLATE500} />
@@ -226,7 +206,6 @@ export default function BatchCard({
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────
 const c = StyleSheet.create({
   card: {
     backgroundColor: Colors.WHITE,
@@ -245,8 +224,6 @@ const c = StyleSheet.create({
       android: { elevation: 3 },
     }),
   },
-
-  // ── Header ────────────────────────────────────────────────
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -300,7 +277,6 @@ const c = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // ── Age circle ────────────────────────────────────────────
   ageCircle: {
     width: 62,
     height: 62,
@@ -323,7 +299,6 @@ const c = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ── Stats strip ────────────────────────────────────────────
   statsStrip: {
     flexDirection: "row",
     backgroundColor: Colors.G50,
@@ -357,7 +332,6 @@ const c = StyleSheet.create({
     marginVertical: 10,
   },
 
-  // ── Footer ────────────────────────────────────────────────
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",

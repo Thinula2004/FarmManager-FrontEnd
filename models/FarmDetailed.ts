@@ -19,7 +19,7 @@ export default class FarmDetailed extends Modal {
 
 
   constructor(json?: any) {
-    super(json);
+    super(json);  
 
     this.name = json?.name ?? "";
     this.city = json?.city ?? "";

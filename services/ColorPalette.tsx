@@ -9,6 +9,7 @@ const Colors = {
   G200: "#bbf7d0",
   G100: "#DCFCE7",
   G50: "#F0FDF4",
+  G25: "#f8fffa",
 
   SLATE900: "#0f172a",
   SLATE700: "#1E293B",

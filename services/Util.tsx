@@ -85,7 +85,10 @@ export function getDaysSince(dateString: string | undefined): number {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
-export function stringToDate(dateString: string): Date {
+export function stringToDate(dateString: string | undefined): Date {
+  if (!dateString) {
+    return new Date();
+  }
   return new Date(dateString);
 }
 
@@ -125,7 +128,7 @@ export function capitalize(value: string): string {
 }
 
 export function formatWeight(
-  weight: number | undefined,
+  weight: number | undefined | null,
   isUnit: boolean = true,
 ): string {
   if (!weight) {

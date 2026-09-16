@@ -92,61 +92,41 @@ const ACTION_STYLE: Record<ActivityAction, ActionStyle> = {
 
 type EntityStyle = {
   color: string;
-  bg: string;
-  border: string;
-  icon: keyof typeof Ionicons.glyphMap;
   label: string;
 };
 
 const ENTITY_STYLE: Record<ActivityEntity, EntityStyle> = {
   [ActivityEntity.FARM]: {
     color: Colors.G700,
-    bg: Colors.G50,
-    border: Colors.G100,
-    icon: "storefront-outline",
     label: "Farm",
   },
   [ActivityEntity.BATCH]: {
     color: "#0F6E56",
-    bg: "#E1F5EE",
-    border: "#9FE1CB",
-    icon: "layers-outline",
     label: "Batch",
   },
   [ActivityEntity.VISIT]: {
     color: "#0F6E56",
-    bg: "#E1F5EE",
-    border: "#9FE1CB",
-    icon: "clipboard-outline",
     label: "Visit",
   },
   [ActivityEntity.OFFICER]: {
     color: "#185FA5",
-    bg: "#E6F1FB",
-    border: "#B5D4F4",
-    icon: "person-outline",
     label: "Officer",
   },
   [ActivityEntity.FEED_ENTRY]: {
     color: Colors.AMBER600,
-    bg: Colors.AMBER50,
-    border: Colors.AMBER200 ?? "#FAC775",
-    icon: "nutrition-outline",
     label: "Feed",
   },
   [ActivityEntity.SUPPLY]: {
     color: "#B25324",
-    bg: "#FAECE7",
-    border: "#F5C4B3",
-    icon: "medkit-outline",
     label: "Supply",
   },
   [ActivityEntity.USER]: {
     color: Colors.SLATE500,
-    bg: Colors.SLATE100,
-    border: Colors.SLATE200,
-    icon: "person-circle-outline",
     label: "User",
+  },
+  [ActivityEntity.CHILLOUT]: {
+    color: "#B25324",
+    label: "Chillout",
   },
 };
 

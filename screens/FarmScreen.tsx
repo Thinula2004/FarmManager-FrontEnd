@@ -224,7 +224,6 @@ export default function FarmScreen({ route }: Props) {
           />
         }
       >
-        {/* ── Vitals strip ── */}
         <View style={styles.vitalsStrip}>
           <VitalItem
             label="Live Chicks"
